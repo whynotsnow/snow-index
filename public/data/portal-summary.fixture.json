@@ -1,0 +1,52 @@
+{
+  "ok": true,
+  "data": {
+    "generatedAt": "2026-08-22T00:00:00.000Z",
+    "cacheTtlSeconds": 60,
+    "plaza": {
+      "pinnedNotices": [
+        {
+          "id": "fixture-notice-portal",
+          "type": "notice",
+          "title": "Portal 聚合接口已预留",
+          "excerpt": "首页优先读取 snow-base 的公开 summary API；不可用时展示本地 fixture 降级。",
+          "url": "/plaza/t/fixture-notice-portal",
+          "replyCount": 0,
+          "reactionCount": 0,
+          "pinned": true,
+          "locked": false,
+          "lastActivityAt": "2026-08-22T00:00:00.000Z",
+          "createdAt": "2026-08-22T00:00:00.000Z"
+        }
+      ],
+      "recentTopics": [
+        {
+          "id": "fixture-status-theme",
+          "type": "status",
+          "title": "Portal 主题已切换到 sky/cyan 风格",
+          "excerpt": "视觉主题参考 Blog 公开图片的天空蓝、cyan、云白和海军蓝色彩语言。",
+          "url": "/plaza/t/fixture-status-theme",
+          "replyCount": 0,
+          "reactionCount": 0,
+          "pinned": false,
+          "locked": false,
+          "lastActivityAt": "2026-08-22T00:00:00.000Z",
+          "createdAt": "2026-08-22T00:00:00.000Z"
+        },
+        {
+          "id": "fixture-discussion-contract",
+          "type": "discussion",
+          "title": "Plaza 动态将从公开 DTO 接入",
+          "excerpt": "Portal 不读取 Admin API、D1 内部字段、审核备注、token、cookie 或 Access 状态。",
+          "url": "/plaza/t/fixture-discussion-contract",
+          "replyCount": 0,
+          "reactionCount": 0,
+          "pinned": false,
+          "locked": false,
+          "lastActivityAt": "2026-08-22T00:00:00.000Z",
+          "createdAt": "2026-08-22T00:00:00.000Z"
+        }
+      ]
+    }
+  }
+}

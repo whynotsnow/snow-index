@@ -9,6 +9,7 @@
 		/>
 		<title>WhynotSnow</title>
 		<link rel="stylesheet" href="/styles.css" />
+		<script type="module" src="/app.js"></script>
 	</head>
 	<body>
 		<header class="topbar" aria-label="站点导航">
@@ -99,8 +100,9 @@
 					<div class="panel-head">
 						<p class="eyebrow">Activity</p>
 						<h2 id="recent-title">近期动态</h2>
+						<p class="summary-source" data-summary-source>正在读取 Plaza 公开摘要...</p>
 					</div>
-					<ol class="activity-list">
+					<ol class="activity-list" data-portal-activity>
 						<li>
 							<span class="activity-type">Portal</span>
 							<strong>主域名首页规划已确定</strong>

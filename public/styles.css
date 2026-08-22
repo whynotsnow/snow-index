@@ -364,6 +364,26 @@ h2 {
 	margin: 8px 0 0;
 }
 
+.activity-list a {
+	display: inline-flex;
+	margin-top: 12px;
+	color: #106d90;
+	font-weight: 720;
+}
+
+.activity-meta,
+.summary-source {
+	display: block;
+	margin-top: 10px;
+	color: var(--soft);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.summary-source {
+	margin-bottom: 14px;
+}
+
 .project-list {
 	display: grid;
 	gap: 10px;
