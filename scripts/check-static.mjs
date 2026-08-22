@@ -36,6 +36,14 @@ const deploymentDoc = fs.readFileSync(
 	path.join(process.cwd(), "docs/developers/deployment-routing.md"),
 	"utf8",
 );
+const visualBoundaryDoc = fs.readFileSync(
+	path.join(process.cwd(), "docs/developers/portal-visual-content-boundary.md"),
+	"utf8",
+);
+const developerDocsIndex = fs.readFileSync(
+	path.join(process.cwd(), "docs/developers/README.md"),
+	"utf8",
+);
 const summary = JSON.parse(
 	fs.readFileSync(path.join(publicRoot, "data/portal-summary.fixture.json"), "utf8"),
 );
@@ -51,6 +59,10 @@ for (const label of ["Blog", "Plaza", "Projects", "RSS", "Admin"]) {
 
 if (!index.includes("snow-base")) {
 	failures.push("Home page missing backend boundary note");
+}
+
+if (!index.includes("Plaza 摘要已接入公开契约")) {
+	failures.push("Home page status copy is stale");
 }
 
 if (!index.includes('src="/app.js"') || !index.includes("data-portal-activity")) {
@@ -104,6 +116,22 @@ for (const phrase of [
 	if (!deploymentDoc.includes(phrase)) {
 		failures.push(`Deployment doc missing ${phrase}`);
 	}
+}
+
+for (const phrase of [
+	"Sky/cyan/navy/light cloud palette",
+	"Blog remains the long-form reading system",
+	"Plaza is the public community/activity layer",
+	"Do not use the Blog reference image directly",
+	"Future additions should land in this order",
+]) {
+	if (!visualBoundaryDoc.includes(phrase)) {
+		failures.push(`Visual boundary doc missing ${phrase}`);
+	}
+}
+
+if (!developerDocsIndex.includes("portal-visual-content-boundary.md")) {
+	failures.push("Developer docs index missing Portal visual boundary link");
 }
 
 if (
