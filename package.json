@@ -1,0 +1,14 @@
+{
+  "name": "snow-index",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@10.22.0",
+  "scripts": {
+    "plan:status": "node scripts/plan-status.mjs",
+    "dev:plan": "node scripts/open-dev-plan.mjs"
+  }
+}
