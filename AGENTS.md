@@ -28,7 +28,7 @@ This repository is the planned public portal for `whynotsnow.com`.
 ## Commands
 
 - `pnpm plan:status`: print adjacent sidecar planning board status.
-- `pnpm dev:plan`: start the adjacent sidecar preview board.
+- `pnpm plan`: start the adjacent sidecar preview board.
 
 Do not claim a command passed unless it was actually run in this workspace and observed.
 

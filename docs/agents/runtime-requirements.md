@@ -13,7 +13,7 @@ Do not record the detected state of a particular developer, machine, or session 
 | Static check command | Validate current static frontend surface | `pnpm check` |
 | Local preview command | Run the public portal locally | `pnpm dev` |
 | Sidecar status command | Inspect adjacent planning board before executing plan-bound work | `pnpm --silent plan:status --json` |
-| Sidecar preview command | Open the adjacent planning board | `pnpm dev:plan` |
+| Sidecar preview command | Open the adjacent planning board | `pnpm plan` |
 
 ## Capability resolution
 
