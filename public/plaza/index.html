@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content="WhynotSnow Plaza 的公开前端入口。" />
+		<title>Plaza · WhynotSnow</title>
+		<link rel="stylesheet" href="/styles.css" />
+	</head>
+	<body>
+		<header class="topbar" aria-label="站点导航">
+			<a class="brand" href="/" aria-label="WhynotSnow 首页">
+				<span class="brand-mark">✳</span>
+				<span>WhynotSnow</span>
+			</a>
+			<nav class="topnav" aria-label="主要入口">
+				<a href="/">Home</a>
+				<a href="https://blog.whynotsnow.com/">Blog</a>
+				<a href="/rss.xml">RSS</a>
+				<a href="https://admin.whynotsnow.com/" rel="nofollow">Admin</a>
+			</nav>
+		</header>
+
+		<main class="plaza-page">
+			<section class="plaza-header" aria-labelledby="plaza-title">
+				<p class="eyebrow">Plaza</p>
+				<h1 id="plaza-title">公共动态和讨论入口</h1>
+				<p>
+					Plaza 第一版用于承载公告、站长短动态、讨论、问答、反馈和留言。公开写入、审核和防滥用由后端服务提供。
+				</p>
+			</section>
+
+			<section class="topic-tools" aria-label="主题类型">
+				<button type="button" aria-pressed="true">全部</button>
+				<button type="button">公告</button>
+				<button type="button">动态</button>
+				<button type="button">讨论</button>
+				<button type="button">反馈</button>
+				<button type="button">留言</button>
+			</section>
+
+			<section class="feed-shell" aria-label="Plaza 动态">
+				<article class="topic pinned">
+					<div>
+						<span class="activity-type">置顶</span>
+						<h2>Plaza 前端入口已预留</h2>
+						<p>动态流会在公开 API 和 DTO 契约确定后接入。当前页面保留分类、列表和降级状态结构。</p>
+					</div>
+					<span class="topic-meta">0 回复</span>
+				</article>
+				<article class="topic muted">
+					<div>
+						<span class="activity-type">接口状态</span>
+						<h2>等待公开数据契约</h2>
+						<p>页面不会读取私有 Admin API、D1 表结构、R2 key 或 Turnstile secret。</p>
+					</div>
+					<span class="topic-meta">降级</span>
+				</article>
+			</section>
+		</main>
+	</body>
+</html>

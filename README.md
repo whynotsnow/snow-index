@@ -19,6 +19,16 @@
 ## Commands
 
 ```bash
+pnpm dev
+pnpm check
 pnpm plan:status
 pnpm dev:plan
 ```
+
+## Current MVP
+
+The first implementation is a static Portal shell under `public/`.
+
+- `/` presents the main-domain identity, public navigation, status, recent activity placeholders, project links, and the protected Admin entry boundary.
+- `/plaza/` presents the Plaza frontend entry and fallback state while the public API contract is still planned.
+- Aggregated Blog, Plaza, comments, and status data are placeholders until a public DTO contract is agreed in `../snow-index.plan`.
