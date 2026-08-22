@@ -22,6 +22,9 @@ function resolveFile(url) {
 	if (!target.startsWith(root)) {
 		return null;
 	}
+	if (pathname.startsWith("/plaza/t/")) {
+		return path.join(root, "plaza", "topic.html");
+	}
 	if (fs.existsSync(target) && fs.statSync(target).isDirectory()) {
 		target = path.join(target, "index.html");
 	}

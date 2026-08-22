@@ -1,0 +1,187 @@
+{
+  "ok": true,
+  "data": {
+    "generatedAt": "2026-08-22T00:00:00.000Z",
+    "topics": [
+      {
+        "id": "fixture-notice-portal",
+        "type": "notice",
+        "title": "Portal 聚合接口已预留",
+        "excerpt": "首页优先读取 snow-base 的公开 summary API；不可用时展示本地 fixture 降级。",
+        "url": "/plaza/t/fixture-notice-portal",
+        "replyCount": 1,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "pinned": true,
+        "locked": false,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      },
+      {
+        "id": "fixture-status-theme",
+        "type": "status",
+        "title": "Portal 主题已切换到 sky/cyan 风格",
+        "excerpt": "视觉主题参考 Blog 公开图片的天空蓝、cyan、云白和海军蓝色彩语言。",
+        "url": "/plaza/t/fixture-status-theme",
+        "replyCount": 0,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "pinned": false,
+        "locked": false,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      },
+      {
+        "id": "fixture-discussion-contract",
+        "type": "discussion",
+        "title": "Plaza 动态将从公开 DTO 接入",
+        "excerpt": "Portal 不读取 Admin API、D1 内部字段、审核备注、token、cookie 或 Access 状态。",
+        "url": "/plaza/t/fixture-discussion-contract",
+        "replyCount": 2,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "pinned": false,
+        "locked": false,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      },
+      {
+        "id": "fixture-feedback-submit",
+        "type": "feedback",
+        "title": "公开提交入口等待 Turnstile sitekey",
+        "excerpt": "发主题、回复和附件上传会使用 plaza_topic、plaza_reply 和 plaza_attachment action。",
+        "url": "/plaza/t/fixture-feedback-submit",
+        "replyCount": 0,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "pinned": false,
+        "locked": true,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      },
+      {
+        "id": "fixture-guestbook",
+        "type": "guestbook",
+        "title": "全站留言将作为 guestbook 类型主题",
+        "excerpt": "Plaza 可以承载公开留言，但匿名提交成功后只显示待审核提示，不直接出现在公开列表。",
+        "url": "/plaza/t/fixture-guestbook",
+        "replyCount": 0,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "pinned": false,
+        "locked": false,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      }
+    ],
+    "topicDetails": {
+      "fixture-notice-portal": {
+        "id": "fixture-notice-portal",
+        "type": "notice",
+        "title": "Portal 聚合接口已预留",
+        "body": "首页已经接入 /api/v1/portal/summary 的公开 DTO。Plaza 列表页会优先读取 /api/v1/plaza/topics，并在接口不可用时使用本地 fixture，保持页面可解释而不是空白。",
+        "excerpt": "首页优先读取 snow-base 的公开 summary API；不可用时展示本地 fixture 降级。",
+        "url": "/plaza/t/fixture-notice-portal",
+        "replyCount": 1,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "attachments": [],
+        "pinned": true,
+        "locked": false,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      },
+      "fixture-status-theme": {
+        "id": "fixture-status-theme",
+        "type": "status",
+        "title": "Portal 主题已切换到 sky/cyan 风格",
+        "body": "主题更新保留了 Portal 的扫描效率，同时把色彩语言调整为天空蓝、cyan、云白、海军蓝和少量珊瑚强调。",
+        "excerpt": "视觉主题参考 Blog 公开图片的天空蓝、cyan、云白和海军蓝色彩语言。",
+        "url": "/plaza/t/fixture-status-theme",
+        "replyCount": 0,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "attachments": [],
+        "pinned": false,
+        "locked": false,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      },
+      "fixture-discussion-contract": {
+        "id": "fixture-discussion-contract",
+        "type": "discussion",
+        "title": "Plaza 动态将从公开 DTO 接入",
+        "body": "snow-index 只消费公开 API 返回的 visible 内容。待审核、隐藏、删除内容不会出现在公开列表或详情中；内部审核备注、actor、请求来源 hash 和 D1 row 字段也不会进入前端。",
+        "excerpt": "Portal 不读取 Admin API、D1 内部字段、审核备注、token、cookie 或 Access 状态。",
+        "url": "/plaza/t/fixture-discussion-contract",
+        "replyCount": 2,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "attachments": [],
+        "pinned": false,
+        "locked": false,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      },
+      "fixture-feedback-submit": {
+        "id": "fixture-feedback-submit",
+        "type": "feedback",
+        "title": "公开提交入口等待 Turnstile sitekey",
+        "body": "公开提交需要 Turnstile sitekey 和 snow-base 后端验证。前端只会提交一次性 token，不保存 secret；提交成功后展示等待审核，不直接插入公开列表。",
+        "excerpt": "发主题、回复和附件上传会使用 plaza_topic、plaza_reply 和 plaza_attachment action。",
+        "url": "/plaza/t/fixture-feedback-submit",
+        "replyCount": 0,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "attachments": [],
+        "pinned": false,
+        "locked": true,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      },
+      "fixture-guestbook": {
+        "id": "fixture-guestbook",
+        "type": "guestbook",
+        "title": "全站留言将作为 guestbook 类型主题",
+        "body": "guestbook 可以作为 Plaza 的一种公开主题类型出现。它不需要 Blog 路由，也不暴露 Admin 审核流程。",
+        "excerpt": "Plaza 可以承载公开留言，但匿名提交成功后只显示待审核提示，不直接出现在公开列表。",
+        "url": "/plaza/t/fixture-guestbook",
+        "replyCount": 0,
+        "reactionCount": 0,
+        "attachmentCount": 0,
+        "attachments": [],
+        "pinned": false,
+        "locked": false,
+        "lastActivityAt": "2026-08-22T00:00:00.000Z",
+        "createdAt": "2026-08-22T00:00:00.000Z"
+      }
+    },
+    "replies": {
+      "fixture-notice-portal": [
+        {
+          "id": "fixture-reply-portal-1",
+          "body": "列表、详情和回复都应以公开 DTO 为边界；接口不可用时继续显示降级状态。",
+          "authorName": "WhynotSnow",
+          "attachments": [],
+          "createdAt": "2026-08-22T00:00:00.000Z"
+        }
+      ],
+      "fixture-discussion-contract": [
+        {
+          "id": "fixture-reply-contract-1",
+          "body": "主题详情页读取附件 URL 的时机应晚于列表页，列表只显示 attachmentCount。",
+          "authorName": "WhynotSnow",
+          "attachments": [],
+          "createdAt": "2026-08-22T00:00:00.000Z"
+        },
+        {
+          "id": "fixture-reply-contract-2",
+          "body": "公开 not found 需要覆盖待审核、隐藏、删除和不存在几种情况。",
+          "authorName": "WhynotSnow",
+          "attachments": [],
+          "createdAt": "2026-08-22T00:00:00.000Z"
+        }
+      ]
+    }
+  }
+}

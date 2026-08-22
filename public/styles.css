@@ -60,7 +60,9 @@ a {
 .hero-actions,
 .status-band,
 .entry,
-.project-list a {
+.project-list a,
+.compose-shell,
+.topic-states {
 	display: flex;
 	align-items: center;
 }
@@ -470,10 +472,106 @@ h2 {
 	font-size: 20px;
 }
 
+.topic h2 a:hover,
+.topic h2 a:focus-visible,
+.back-link:hover,
+.back-link:focus-visible {
+	color: #087e9b;
+	outline: none;
+}
+
 .topic-meta {
 	flex: 0 0 auto;
 	color: var(--soft);
 	font-size: 14px;
+}
+
+.compose-shell {
+	justify-content: space-between;
+	gap: 18px;
+	margin: 22px 0;
+	padding: 18px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: rgba(255, 255, 255, 0.72);
+	box-shadow: 0 10px 26px var(--shadow);
+}
+
+.compose-shell p {
+	margin: 6px 0 0;
+	color: var(--muted);
+	line-height: 1.6;
+}
+
+.compose-shell button {
+	flex: 0 0 auto;
+	min-height: 38px;
+	border: 1px solid rgba(255, 143, 157, 0.42);
+	border-radius: 6px;
+	padding: 0 12px;
+	background: #ffeaf0;
+	color: #ba5264;
+	font: inherit;
+	font-weight: 720;
+}
+
+.back-link {
+	display: inline-flex;
+	margin-bottom: 18px;
+	color: #106d90;
+	font-weight: 720;
+}
+
+.topic-detail-card,
+.reply-card {
+	padding: 22px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--surface);
+	box-shadow: 0 10px 26px var(--shadow);
+}
+
+.topic-detail-card h1 {
+	margin-bottom: 14px;
+	font-size: clamp(34px, 6vw, 64px);
+	line-height: 1.02;
+}
+
+.topic-detail-card p,
+.reply-card p {
+	color: var(--muted);
+	font-size: 17px;
+	line-height: 1.75;
+}
+
+.topic-states {
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 18px;
+}
+
+.state-pill {
+	display: inline-flex;
+	min-height: 28px;
+	align-items: center;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	padding: 0 9px;
+	background: #e7f9ff;
+	color: #106d90;
+	font-size: 13px;
+	font-weight: 720;
+}
+
+.reply-panel {
+	margin-top: 34px;
+	padding-top: 24px;
+	border-top: 1px solid var(--line);
+}
+
+.reply-list {
+	display: grid;
+	gap: 12px;
 }
 
 .muted {
@@ -483,7 +581,8 @@ h2 {
 @media (max-width: 760px) {
 	.topbar,
 	.status-band,
-	.topic {
+	.topic,
+	.compose-shell {
 		align-items: flex-start;
 		flex-direction: column;
 	}

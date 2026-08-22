@@ -5,10 +5,13 @@ const publicRoot = path.join(process.cwd(), "public");
 const requiredFiles = [
 	"index.html",
 	"plaza/index.html",
+	"plaza/topic.html",
 	"styles.css",
 	"app.js",
+	"plaza.js",
 	"assets/portal-map.png",
 	"data/portal-summary.fixture.json",
+	"data/plaza.fixture.json",
 ];
 
 const failures = [];
@@ -22,9 +25,14 @@ for (const file of requiredFiles) {
 
 const index = fs.readFileSync(path.join(publicRoot, "index.html"), "utf8");
 const plaza = fs.readFileSync(path.join(publicRoot, "plaza/index.html"), "utf8");
+const plazaTopic = fs.readFileSync(path.join(publicRoot, "plaza/topic.html"), "utf8");
 const app = fs.readFileSync(path.join(publicRoot, "app.js"), "utf8");
+const plazaApp = fs.readFileSync(path.join(publicRoot, "plaza.js"), "utf8");
 const summary = JSON.parse(
 	fs.readFileSync(path.join(publicRoot, "data/portal-summary.fixture.json"), "utf8"),
+);
+const plazaFixture = JSON.parse(
+	fs.readFileSync(path.join(publicRoot, "data/plaza.fixture.json"), "utf8"),
 );
 
 for (const label of ["Blog", "Plaza", "Projects", "RSS", "Admin"]) {
@@ -45,6 +53,14 @@ if (!plaza.includes("公开 API") || !plaza.includes("Turnstile secret")) {
 	failures.push("Plaza page missing public API fallback boundary");
 }
 
+if (!plaza.includes('src="/plaza.js"') || !plaza.includes("data-plaza-feed")) {
+	failures.push("Plaza page missing list script hook");
+}
+
+if (!plazaTopic.includes('src="/plaza.js"') || !plazaTopic.includes("data-topic-detail")) {
+	failures.push("Plaza topic page missing detail script hook");
+}
+
 if (
 	!app.includes("https://api.whynotsnow.com") ||
 	!app.includes("/api/v1/portal/summary")
@@ -54,6 +70,20 @@ if (
 
 if (!app.includes("localStorage") || !app.includes("portal-summary.fixture.json")) {
 	failures.push("Portal script missing cache or fixture fallback");
+}
+
+for (const endpoint of [
+	"/api/v1/plaza/topics",
+	"/api/v1/plaza/topics/",
+	"/replies?limit=50&offset=0",
+]) {
+	if (!plazaApp.includes(endpoint)) {
+		failures.push(`Plaza script missing ${endpoint}`);
+	}
+}
+
+if (!plazaApp.includes("plaza.fixture.json")) {
+	failures.push("Plaza script missing fixture fallback");
 }
 
 const plazaSummary = summary?.data?.plaza;
@@ -94,6 +124,41 @@ for (const topic of topics) {
 		if (typeof topic[key] !== "boolean") {
 			failures.push(`Portal summary topic missing boolean ${key}`);
 		}
+	}
+}
+
+const plazaTopics = plazaFixture?.data?.topics ?? [];
+if (!Array.isArray(plazaTopics) || plazaTopics.length === 0) {
+	failures.push("Plaza fixture missing topics");
+}
+
+for (const topic of plazaTopics) {
+	for (const key of [
+		"id",
+		"type",
+		"title",
+		"excerpt",
+		"url",
+		"lastActivityAt",
+		"createdAt",
+	]) {
+		if (typeof topic[key] !== "string") {
+			failures.push(`Plaza fixture topic missing string ${key}`);
+		}
+	}
+	for (const key of ["replyCount", "reactionCount", "attachmentCount"]) {
+		if (typeof topic[key] !== "number") {
+			failures.push(`Plaza fixture topic missing number ${key}`);
+		}
+	}
+	for (const key of ["pinned", "locked"]) {
+		if (typeof topic[key] !== "boolean") {
+			failures.push(`Plaza fixture topic missing boolean ${key}`);
+		}
+	}
+	const detail = plazaFixture?.data?.topicDetails?.[topic.id];
+	if (!detail || typeof detail.body !== "string" || !Array.isArray(detail.attachments)) {
+		failures.push(`Plaza fixture missing detail for ${topic.id}`);
 	}
 }
 

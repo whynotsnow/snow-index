@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content="WhynotSnow Plaza 主题详情。" />
+		<title>Plaza Topic · WhynotSnow</title>
+		<link rel="stylesheet" href="/styles.css" />
+		<script type="module" src="/plaza.js"></script>
+	</head>
+	<body data-plaza-page="topic">
+		<header class="topbar" aria-label="站点导航">
+			<a class="brand" href="/" aria-label="WhynotSnow 首页">
+				<span class="brand-mark">✳</span>
+				<span>WhynotSnow</span>
+			</a>
+			<nav class="topnav" aria-label="主要入口">
+				<a href="/">Home</a>
+				<a href="/plaza/">Plaza</a>
+				<a href="https://blog.whynotsnow.com/">Blog</a>
+				<a href="/rss.xml">RSS</a>
+			</nav>
+		</header>
+
+		<main class="plaza-page">
+			<a class="back-link" href="/plaza/">返回 Plaza</a>
+			<p class="summary-source" data-plaza-source>正在读取主题详情...</p>
+			<section data-topic-detail aria-label="主题详情">
+				<article class="topic muted">
+					<div>
+						<span class="activity-type">加载</span>
+						<h2>正在读取主题详情</h2>
+						<p>主题不可见、待审核、隐藏或删除时会显示公开不可见状态。</p>
+					</div>
+				</article>
+			</section>
+
+			<section class="reply-panel" aria-labelledby="replies-title">
+				<div class="panel-head">
+					<p class="eyebrow">Replies</p>
+					<h2 id="replies-title">回复</h2>
+				</div>
+				<div data-topic-replies class="reply-list"></div>
+			</section>
+
+			<section class="compose-shell" aria-label="回复入口">
+				<div>
+					<strong>回复提交</strong>
+					<p>公开回复会在 Turnstile `plaza_reply` 接入后开放；提交成功后等待审核，不会立即显示。</p>
+				</div>
+				<button type="button" disabled>等待开放</button>
+			</section>
+		</main>
+	</body>
+</html>

@@ -6,8 +6,9 @@
 		<meta name="description" content="WhynotSnow Plaza 的公开前端入口。" />
 		<title>Plaza · WhynotSnow</title>
 		<link rel="stylesheet" href="/styles.css" />
+		<script type="module" src="/plaza.js"></script>
 	</head>
-	<body>
+	<body data-plaza-page="list">
 		<header class="topbar" aria-label="站点导航">
 			<a class="brand" href="/" aria-label="WhynotSnow 首页">
 				<span class="brand-mark">✳</span>
@@ -31,31 +32,39 @@
 			</section>
 
 			<section class="topic-tools" aria-label="主题类型">
-				<button type="button" aria-pressed="true">全部</button>
-				<button type="button">公告</button>
-				<button type="button">动态</button>
-				<button type="button">讨论</button>
-				<button type="button">反馈</button>
-				<button type="button">留言</button>
+				<button type="button" data-plaza-type="all" aria-pressed="true">全部</button>
+				<button type="button" data-plaza-type="notice">公告</button>
+				<button type="button" data-plaza-type="status">动态</button>
+				<button type="button" data-plaza-type="discussion">讨论</button>
+				<button type="button" data-plaza-type="question">问答</button>
+				<button type="button" data-plaza-type="feedback">反馈</button>
+				<button type="button" data-plaza-type="guestbook">留言</button>
 			</section>
 
-			<section class="feed-shell" aria-label="Plaza 动态">
-				<article class="topic pinned">
-					<div>
-						<span class="activity-type">置顶</span>
-						<h2>Plaza 前端入口已预留</h2>
-						<p>动态流会在公开 API 和 DTO 契约确定后接入。当前页面保留分类、列表和降级状态结构。</p>
-					</div>
-					<span class="topic-meta">0 回复</span>
-				</article>
+			<section class="compose-shell" aria-label="发帖入口">
+				<div>
+					<strong>公开提交</strong>
+					<p>发主题、回复和附件上传会在 Turnstile sitekey 与后端验证就绪后开放；提交成功后进入审核队列。</p>
+				</div>
+				<button type="button" disabled>等待开放</button>
+			</section>
+
+			<p class="summary-source" data-plaza-source>正在读取 Plaza 公开主题...</p>
+
+			<section class="feed-shell" data-plaza-feed aria-label="Plaza 动态">
 				<article class="topic muted">
 					<div>
-						<span class="activity-type">接口状态</span>
-						<h2>等待公开数据契约</h2>
-						<p>页面不会读取私有 Admin API、D1 表结构、R2 key 或 Turnstile secret。</p>
+						<span class="activity-type">加载</span>
+						<h2>正在读取 Plaza 动态</h2>
+						<p>优先连接公开 API，失败时会显示本地降级数据。</p>
 					</div>
-					<span class="topic-meta">降级</span>
 				</article>
+			</section>
+
+			<section class="boundary" aria-labelledby="plaza-boundary-title">
+				<p class="eyebrow">Boundary</p>
+				<h2 id="plaza-boundary-title">公开 API 边界</h2>
+				<p>页面不会读取私有 Admin API、D1/R2 内部字段、审核备注、R2 key 或 Turnstile secret。</p>
 			</section>
 		</main>
 	</body>
