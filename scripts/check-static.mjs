@@ -9,6 +9,8 @@ const requiredFiles = [
 	"styles.css",
 	"app.js",
 	"plaza.js",
+	"_redirects",
+	"_headers",
 	"assets/portal-map.png",
 	"data/portal-summary.fixture.json",
 	"data/plaza.fixture.json",
@@ -26,8 +28,14 @@ for (const file of requiredFiles) {
 const index = fs.readFileSync(path.join(publicRoot, "index.html"), "utf8");
 const plaza = fs.readFileSync(path.join(publicRoot, "plaza/index.html"), "utf8");
 const plazaTopic = fs.readFileSync(path.join(publicRoot, "plaza/topic.html"), "utf8");
+const redirects = fs.readFileSync(path.join(publicRoot, "_redirects"), "utf8");
+const headers = fs.readFileSync(path.join(publicRoot, "_headers"), "utf8");
 const app = fs.readFileSync(path.join(publicRoot, "app.js"), "utf8");
 const plazaApp = fs.readFileSync(path.join(publicRoot, "plaza.js"), "utf8");
+const deploymentDoc = fs.readFileSync(
+	path.join(process.cwd(), "docs/developers/deployment-routing.md"),
+	"utf8",
+);
 const summary = JSON.parse(
 	fs.readFileSync(path.join(publicRoot, "data/portal-summary.fixture.json"), "utf8"),
 );
@@ -59,6 +67,43 @@ if (!plaza.includes('src="/plaza.js"') || !plaza.includes("data-plaza-feed")) {
 
 if (!plazaTopic.includes('src="/plaza.js"') || !plazaTopic.includes("data-topic-detail")) {
 	failures.push("Plaza topic page missing detail script hook");
+}
+
+if (!redirects.includes("/plaza /plaza/ 301")) {
+	failures.push("Redirects missing /plaza normalization");
+}
+
+if (!redirects.includes("/plaza/t/* /plaza/topic.html 200")) {
+	failures.push("Redirects missing Plaza topic shell fallback");
+}
+
+if (redirects.includes("/api") || redirects.includes("/admin")) {
+	failures.push("Redirects must not claim API or Admin routes");
+}
+
+for (const header of [
+	"Content-Security-Policy",
+	"https://api.whynotsnow.com",
+	"https://challenges.cloudflare.com",
+	"X-Content-Type-Options: nosniff",
+	"/assets/*",
+	"/data/*",
+]) {
+	if (!headers.includes(header)) {
+		failures.push(`Headers missing ${header}`);
+	}
+}
+
+for (const phrase of [
+	"Publish directory: `public`",
+	"`www.whynotsnow.com`",
+	"`/plaza/t/:id`",
+	"`api.whynotsnow.com`",
+	"No `snow-index` environment variable contains secrets",
+]) {
+	if (!deploymentDoc.includes(phrase)) {
+		failures.push(`Deployment doc missing ${phrase}`);
+	}
 }
 
 if (

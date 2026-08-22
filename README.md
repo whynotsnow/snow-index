@@ -29,6 +29,17 @@ pnpm dev:plan
 
 The first implementation is a static Portal shell under `public/`.
 
-- `/` presents the main-domain identity, public navigation, status, recent activity placeholders, project links, and the protected Admin entry boundary.
-- `/plaza/` presents the Plaza frontend entry and fallback state while the public API contract is still planned.
-- Aggregated Blog, Plaza, comments, and status data are placeholders until a public DTO contract is agreed in `../snow-index.plan`.
+- `/` presents the main-domain identity, public navigation, Plaza summary, project links, and the protected Admin entry boundary.
+- `/plaza/` presents the Plaza frontend list shell with public API consumption and fixture fallback.
+- `/plaza/t/:id` presents the Plaza topic detail shell through static routing fallback.
+- Aggregated Blog, comments, and site status data remain future work; the first public Portal summary consumes Plaza data only.
+
+## Deployment Boundary
+
+The first deployable target is static hosting with `public/` as the publish directory.
+
+- `public/_redirects` owns path normalization and the `/plaza/t/:id` topic-shell fallback.
+- `public/_headers` owns static security headers and cache policy.
+- DNS, custom-domain attachment, production deployment, Access configuration, and `www` to apex redirect rules are intentionally not performed by this repository.
+
+See [docs/developers/deployment-routing.md](docs/developers/deployment-routing.md).
