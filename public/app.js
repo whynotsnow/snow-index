@@ -1,7 +1,10 @@
 const API_BASE = "https://api.whynotsnow.com";
 const SUMMARY_ENDPOINT = `${API_BASE}/api/v1/portal/summary`;
+const BLOG_FEED_ENDPOINT = "https://blog.whynotsnow.com/rss.xml";
 const FIXTURE_ENDPOINT = "/data/portal-summary.fixture.json";
+const BLOG_FIXTURE_ENDPOINT = "/data/blog-summary.fixture.json";
 const CACHE_KEY = "snow-index:portal-summary:v1";
+const BLOG_CACHE_KEY = "snow-index:blog-summary:v1";
 const FETCH_TIMEOUT_MS = 3200;
 
 const labels = {
@@ -43,6 +46,28 @@ function isSummary(value) {
 	);
 }
 
+function isBlogPost(value) {
+	return (
+		value &&
+		typeof value.title === "string" &&
+		typeof value.excerpt === "string" &&
+		typeof value.url === "string" &&
+		typeof value.publishedAt === "string" &&
+		Array.isArray(value.categories) &&
+		value.categories.every((category) => typeof category === "string")
+	);
+}
+
+function isBlogSummary(value) {
+	return (
+		value?.ok === true &&
+		typeof value?.data?.generatedAt === "string" &&
+		typeof value?.data?.cacheTtlSeconds === "number" &&
+		Array.isArray(value?.data?.posts) &&
+		value.data.posts.every(isBlogPost)
+	);
+}
+
 async function fetchJson(url, options = {}) {
 	const controller = new AbortController();
 	const timeout = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -65,22 +90,48 @@ async function fetchJson(url, options = {}) {
 	}
 }
 
-function readCache() {
+async function fetchText(url, options = {}) {
+	const controller = new AbortController();
+	const timeout = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 	try {
-		const raw = window.localStorage.getItem(CACHE_KEY);
+		const response = await fetch(url, {
+			headers: { Accept: "application/rss+xml, application/xml, text/xml" },
+			signal: controller.signal,
+			...options,
+		});
+		if (!response.ok) {
+			throw new Error(`Request failed with ${response.status}`);
+		}
+		return response.text();
+	} finally {
+		window.clearTimeout(timeout);
+	}
+}
+
+function readCache() {
+	return readTypedCache(CACHE_KEY, isSummary);
+}
+
+function readTypedCache(key, validator) {
+	try {
+		const raw = window.localStorage.getItem(key);
 		if (!raw) {
 			return null;
 		}
 		const cached = JSON.parse(raw);
-		return isSummary(cached) ? cached : null;
+		return validator(cached) ? cached : null;
 	} catch {
 		return null;
 	}
 }
 
 function writeCache(summary) {
+	writeTypedCache(CACHE_KEY, summary);
+}
+
+function writeTypedCache(key, payload) {
 	try {
-		window.localStorage.setItem(CACHE_KEY, JSON.stringify(summary));
+		window.localStorage.setItem(key, JSON.stringify(payload));
 	} catch {
 		// Cache is best-effort. Rendering must not depend on it.
 	}
@@ -99,6 +150,79 @@ async function loadPortalSummary() {
 		const summary = await fetchJson(FIXTURE_ENDPOINT);
 		return { summary, source: "fixture" };
 	}
+}
+
+async function loadBlogSummary() {
+	try {
+		const xml = await fetchText(BLOG_FEED_ENDPOINT, { mode: "cors" });
+		const summary = parseBlogFeed(xml);
+		writeTypedCache(BLOG_CACHE_KEY, summary);
+		return { summary, source: "public-feed" };
+	} catch {
+		const cached = readTypedCache(BLOG_CACHE_KEY, isBlogSummary);
+		if (cached) {
+			return { summary: cached, source: "stale-cache" };
+		}
+		const summary = await fetchBlogFixture();
+		return { summary, source: "fixture" };
+	}
+}
+
+async function fetchBlogFixture() {
+	const response = await fetch(BLOG_FIXTURE_ENDPOINT, {
+		headers: { Accept: "application/json" },
+	});
+	if (!response.ok) {
+		throw new Error(`Request failed with ${response.status}`);
+	}
+	const payload = await response.json();
+	if (!isBlogSummary(payload)) {
+		throw new Error("Unexpected Blog summary fixture shape");
+	}
+	return payload;
+}
+
+function parseBlogFeed(xml) {
+	const document = new DOMParser().parseFromString(xml, "application/xml");
+	const parseError = document.querySelector("parsererror");
+	if (parseError) {
+		throw new Error("Invalid Blog feed XML");
+	}
+	const posts = Array.from(document.querySelectorAll("item"))
+		.slice(0, 4)
+		.map((item) => ({
+			title: item.querySelector("title")?.textContent?.trim() ?? "",
+			excerpt: stripHtml(item.querySelector("description")?.textContent ?? ""),
+			url: item.querySelector("link")?.textContent?.trim() ?? "https://blog.whynotsnow.com/",
+			publishedAt: parseDate(item.querySelector("pubDate")?.textContent),
+			categories: Array.from(item.querySelectorAll("category"))
+				.map((category) => category.textContent?.trim() ?? "")
+				.filter(Boolean)
+				.slice(0, 3),
+		}))
+		.filter(isBlogPost);
+	if (posts.length === 0) {
+		throw new Error("Blog feed has no public posts");
+	}
+	return {
+		ok: true,
+		data: {
+			generatedAt: new Date().toISOString(),
+			cacheTtlSeconds: 300,
+			posts,
+		},
+	};
+}
+
+function stripHtml(value) {
+	const element = document.createElement("div");
+	element.innerHTML = value;
+	return (element.textContent ?? "").replace(/\s+/g, " ").trim();
+}
+
+function parseDate(value) {
+	const date = new Date(value ?? Date.now());
+	return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
 }
 
 function formatDate(value) {
@@ -133,6 +257,27 @@ function createTopicItem(topic) {
 	return item;
 }
 
+function createBlogItem(post) {
+	const item = document.createElement("li");
+	const type = document.createElement("span");
+	const title = document.createElement("strong");
+	const excerpt = document.createElement("p");
+	const meta = document.createElement("small");
+	const link = document.createElement("a");
+
+	type.className = "activity-type";
+	type.textContent = post.categories[0] ?? "Blog";
+	title.textContent = post.title;
+	excerpt.textContent = post.excerpt;
+	meta.className = "activity-meta";
+	meta.textContent = formatDate(post.publishedAt);
+	link.href = post.url;
+	link.textContent = "阅读";
+
+	item.append(type, title, excerpt, meta, link);
+	return item;
+}
+
 function renderSummary(summary, source) {
 	const list = document.querySelector("[data-portal-activity]");
 	const sourceText = document.querySelector("[data-summary-source]");
@@ -161,6 +306,27 @@ function renderSummary(summary, source) {
 	}
 }
 
+function renderBlogSummary(summary, source) {
+	const list = document.querySelector("[data-blog-posts]");
+	const sourceText = document.querySelector("[data-blog-source]");
+	if (!list) {
+		return;
+	}
+
+	list.replaceChildren(
+		...summary.data.posts.slice(0, 4).map(createBlogItem),
+	);
+
+	if (sourceText) {
+		const sourceLabel = {
+			"public-feed": "公开 RSS",
+			"stale-cache": "本地缓存",
+			fixture: "本地降级",
+		}[source];
+		sourceText.textContent = `Blog 摘要来源：${sourceLabel} · ${summary.data.cacheTtlSeconds}s TTL`;
+	}
+}
+
 function createEmptyItem() {
 	const item = document.createElement("li");
 	const type = document.createElement("span");
@@ -180,5 +346,14 @@ loadPortalSummary()
 		const sourceText = document.querySelector("[data-summary-source]");
 		if (sourceText) {
 			sourceText.textContent = "Plaza 摘要暂不可用，已保留静态入口。";
+		}
+	});
+
+loadBlogSummary()
+	.then(({ summary, source }) => renderBlogSummary(summary, source))
+	.catch(() => {
+		const sourceText = document.querySelector("[data-blog-source]");
+		if (sourceText) {
+			sourceText.textContent = "Blog 摘要暂不可用，保留 Blog 入口。";
 		}
 	});

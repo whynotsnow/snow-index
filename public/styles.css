@@ -328,6 +328,10 @@ h2 {
 	padding: 28px 0 46px;
 }
 
+.blog-summary {
+	grid-column: 1 / -1;
+}
+
 .panel,
 .boundary,
 .plaza-header,
@@ -342,6 +346,10 @@ h2 {
 	margin: 0;
 	padding: 0;
 	list-style: none;
+}
+
+.compact-list {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .activity-list li,
@@ -601,7 +609,8 @@ h2 {
 
 	.section-grid,
 	.content-columns,
-	.entry-grid {
+	.entry-grid,
+	.compact-list {
 		grid-template-columns: 1fr;
 	}
 

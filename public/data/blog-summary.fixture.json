@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "data": {
+    "generatedAt": "2026-08-22T00:00:00.000Z",
+    "cacheTtlSeconds": 300,
+    "posts": [
+      {
+        "title": "Blog 公开摘要等待 RSS 可用",
+        "excerpt": "Portal 只展示 Blog 公开 feed 中的标题、摘要、链接、时间和分类，不复制长文正文。",
+        "url": "https://blog.whynotsnow.com/",
+        "publishedAt": "2026-08-22T00:00:00.000Z",
+        "categories": ["Portal"]
+      },
+      {
+        "title": "长内容仍由 Blog 承载",
+        "excerpt": "个人长文、笔记和归档继续留在 Blog；主域名只提供入口和短摘要。",
+        "url": "https://blog.whynotsnow.com/",
+        "publishedAt": "2026-08-22T00:00:00.000Z",
+        "categories": ["Blog"]
+      }
+    ]
+  }
+}

@@ -100,7 +100,7 @@ Avoid:
 
 Future additions should land in this order:
 
-1. Public Blog summary once Blog exposes a stable feed or DTO.
+1. Public Blog summary from the existing Blog RSS feed with fixture fallback.
 2. Public site status or now text from a static config or public endpoint.
 3. Optional public comments/Twikoo summary only after `snow-base` provides a sanitized adapter.
 4. Visual asset refresh after content modules stabilize.

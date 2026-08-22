@@ -13,6 +13,7 @@ const requiredFiles = [
 	"_headers",
 	"assets/portal-map.png",
 	"data/portal-summary.fixture.json",
+	"data/blog-summary.fixture.json",
 	"data/plaza.fixture.json",
 ];
 
@@ -47,6 +48,9 @@ const developerDocsIndex = fs.readFileSync(
 const summary = JSON.parse(
 	fs.readFileSync(path.join(publicRoot, "data/portal-summary.fixture.json"), "utf8"),
 );
+const blogSummary = JSON.parse(
+	fs.readFileSync(path.join(publicRoot, "data/blog-summary.fixture.json"), "utf8"),
+);
 const plazaFixture = JSON.parse(
 	fs.readFileSync(path.join(publicRoot, "data/plaza.fixture.json"), "utf8"),
 );
@@ -61,12 +65,16 @@ if (!index.includes("snow-base")) {
 	failures.push("Home page missing backend boundary note");
 }
 
-if (!index.includes("Plaza 摘要已接入公开契约")) {
+if (!index.includes("Blog 与 Plaza 摘要已接入公开契约")) {
 	failures.push("Home page status copy is stale");
 }
 
 if (!index.includes('src="/app.js"') || !index.includes("data-portal-activity")) {
 	failures.push("Home page missing portal summary script hook");
+}
+
+if (!index.includes("data-blog-posts") || !index.includes("最近文章")) {
+	failures.push("Home page missing Blog summary section");
 }
 
 if (!plaza.includes("公开 API") || !plaza.includes("Turnstile secret")) {
@@ -145,6 +153,21 @@ if (!app.includes("localStorage") || !app.includes("portal-summary.fixture.json"
 	failures.push("Portal script missing cache or fixture fallback");
 }
 
+for (const phrase of [
+	"https://blog.whynotsnow.com/rss.xml",
+	"blog-summary.fixture.json",
+	"DOMParser",
+	"data-blog-posts",
+]) {
+	if (!app.includes(phrase)) {
+		failures.push(`Portal script missing Blog summary behavior: ${phrase}`);
+	}
+}
+
+if (!headers.includes("https://blog.whynotsnow.com")) {
+	failures.push("Headers missing Blog feed connect-src");
+}
+
 for (const endpoint of [
 	"/api/v1/plaza/topics",
 	"/api/v1/plaza/topics/",
@@ -197,6 +220,28 @@ for (const topic of topics) {
 		if (typeof topic[key] !== "boolean") {
 			failures.push(`Portal summary topic missing boolean ${key}`);
 		}
+	}
+}
+
+const blogPosts = blogSummary?.data?.posts ?? [];
+if (
+	blogSummary?.ok !== true ||
+	typeof blogSummary?.data?.generatedAt !== "string" ||
+	typeof blogSummary?.data?.cacheTtlSeconds !== "number" ||
+	!Array.isArray(blogPosts) ||
+	blogPosts.length === 0
+) {
+	failures.push("Blog summary fixture has an invalid top-level shape");
+}
+
+for (const post of blogPosts) {
+	for (const key of ["title", "excerpt", "url", "publishedAt"]) {
+		if (typeof post[key] !== "string") {
+			failures.push(`Blog summary post missing string ${key}`);
+		}
+	}
+	if (!Array.isArray(post.categories)) {
+		failures.push("Blog summary post missing categories");
 	}
 }
 

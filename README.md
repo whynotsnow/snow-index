@@ -32,7 +32,7 @@ The first implementation is a static Portal shell under `public/`.
 - `/` presents the main-domain identity, public navigation, Plaza summary, project links, and the protected Admin entry boundary.
 - `/plaza/` presents the Plaza frontend list shell with public API consumption and fixture fallback.
 - `/plaza/t/:id` presents the Plaza topic detail shell through static routing fallback.
-- Aggregated Blog, comments, and site status data remain future work; the first public Portal summary consumes Plaza data only.
+- Blog and Plaza public summaries are now represented on the Portal with fixture fallback; comments and site status remain future work.
 - Visual and content boundaries are documented in [docs/developers/portal-visual-content-boundary.md](docs/developers/portal-visual-content-boundary.md).
 
 ## Deployment Boundary
