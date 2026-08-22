@@ -12,5 +12,8 @@
     "check": "node scripts/check-static.mjs",
     "plan": "node scripts/dev-plan.mjs",
     "plan:status": "node scripts/plan-status.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.125.0"
   }
 }

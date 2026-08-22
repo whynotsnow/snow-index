@@ -17,6 +17,9 @@ const types = new Map([
 
 function resolveFile(url) {
 	const pathname = decodeURIComponent(new URL(url, "http://localhost").pathname);
+	if (pathname === "/plaza") {
+		return { redirect: "/plaza/" };
+	}
 	const normalized = path.normalize(pathname).replace(/^(\.\.[/\\])+/, "");
 	let target = path.join(root, normalized);
 	if (!target.startsWith(root)) {
@@ -32,7 +35,13 @@ function resolveFile(url) {
 }
 
 const server = http.createServer((req, res) => {
-	const target = resolveFile(req.url ?? "/");
+	const resolved = resolveFile(req.url ?? "/");
+	if (resolved?.redirect) {
+		res.writeHead(301, { location: resolved.redirect });
+		res.end();
+		return;
+	}
+	const target = resolved;
 	if (!target || !fs.existsSync(target) || !fs.statSync(target).isFile()) {
 		res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
 		res.end("Not found");

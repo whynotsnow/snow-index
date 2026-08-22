@@ -9,3 +9,7 @@ Developer-facing implementation notes for `snow-index`.
 ## Portal
 
 - [Portal Visual and Content Boundary](portal-visual-content-boundary.md): visual direction, content ownership, Blog/Plaza/Admin boundaries, copy rules, and expansion order.
+
+## Deployment
+
+- [Deployment and Routing Boundary](deployment-routing.md): Cloudflare Pages production deploy, domain routing, headers, redirects, preview, and rollback.

@@ -14,6 +14,49 @@ Use a static Cloudflare Pages project for the first production release.
 
 The current static output also keeps a migration path to Workers Static Assets because the routing files live inside the publish directory.
 
+## Production Deploy
+
+Follow the same deployment boundary used by `snow-base`: regular production deploys run from GitHub Actions, not from a maintainer laptop.
+
+Workflow:
+
+```text
+.github/workflows/production-deploy.yml
+```
+
+The workflow:
+
+- Requires the GitHub Environment named `production`.
+- Verifies the checked-out commit matches `origin/main`.
+- Uses Node.js 22 and pnpm through Corepack.
+- Runs `pnpm install --frozen-lockfile`.
+- Runs `pnpm check`.
+- Direct Uploads `public/` to the Cloudflare Pages project `snow-index` with Wrangler.
+
+Required GitHub Environment secrets:
+
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_API_TOKEN`
+
+The Cloudflare API token should use the narrowest permissions that can deploy the `snow-index` Pages project and read the account context. Do not write the token, account ID, dashboard URLs, cookies, or raw deployment logs into sidecar records.
+
+One-time Cloudflare setup:
+
+- Create or confirm the Cloudflare Pages project named `snow-index`.
+- Ensure the production branch is `main`.
+- Attach `whynotsnow.com` as the production custom domain.
+- Configure `www.whynotsnow.com` as a host-level redirect to `https://whynotsnow.com`.
+
+Emergency local deploys are allowed only with explicit maintainer approval:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm check
+pnpm exec wrangler pages deploy public --project-name snow-index --branch main
+```
+
+Record the reason, source commit, and sanitized validation result after any emergency local deploy.
+
 ## Domains
 
 Production should attach the apex domain:
@@ -77,6 +120,7 @@ Rollback should use the hosting provider's previous deployment rollback when ava
 ## Production Checklist
 
 - `pnpm check` passes.
+- GitHub Actions `Production Deploy` passes from `origin/main`.
 - `/`, `/plaza/`, and `/plaza/t/<known-topic>` render in preview.
 - Custom domain `whynotsnow.com` is attached to the static hosting project.
 - `www.whynotsnow.com` redirects to `https://whynotsnow.com`.
