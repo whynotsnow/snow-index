@@ -1,3 +1,5 @@
+import { siteConfig } from "./site-config.js";
+
 const API_BASE = "https://api.whynotsnow.com";
 const SUMMARY_ENDPOINT = `${API_BASE}/api/v1/portal/summary`;
 const BLOG_FEED_ENDPOINT = "https://blog.whynotsnow.com/rss.xml";
@@ -15,6 +17,132 @@ const labels = {
 	feedback: "反馈",
 	guestbook: "留言",
 };
+
+function setText(selector, value) {
+	const target = document.querySelector(selector);
+	if (target && typeof value === "string") {
+		target.textContent = value;
+	}
+}
+
+function applyRel(anchor, rel) {
+	if (rel) {
+		anchor.rel = rel;
+	}
+}
+
+function createAnchor(item, className) {
+	const anchor = document.createElement("a");
+	anchor.href = item.href;
+	anchor.textContent = item.label ?? item.title;
+	if (className) {
+		anchor.className = className;
+	}
+	applyRel(anchor, item.rel);
+	return anchor;
+}
+
+function renderBrand() {
+	const brand = document.querySelector("[data-site-brand]");
+	if (!brand) {
+		return;
+	}
+	brand.href = siteConfig.site.homeUrl;
+	brand.setAttribute("aria-label", `${siteConfig.site.name} 首页`);
+	brand.replaceChildren();
+
+	const mark = document.createElement("span");
+	const name = document.createElement("span");
+	mark.className = "brand-mark";
+	mark.textContent = siteConfig.site.brandMark;
+	name.textContent = siteConfig.site.name;
+	brand.append(mark, name);
+}
+
+function renderNavigation() {
+	const nav = document.querySelector("[data-site-nav]");
+	if (!nav) {
+		return;
+	}
+	nav.replaceChildren(...siteConfig.navigation.map((item) => createAnchor(item)));
+}
+
+function renderHero() {
+	setText("[data-hero-eyebrow]", siteConfig.hero.eyebrow);
+	setText("#home-title", siteConfig.hero.title);
+	setText("[data-hero-copy]", siteConfig.hero.copy);
+
+	const actions = document.querySelector("[data-hero-actions]");
+	if (!actions) {
+		return;
+	}
+	actions.replaceChildren(
+		...siteConfig.hero.actions.map((action) =>
+			createAnchor(
+				action,
+				action.variant === "primary" ? "primary-action" : "secondary-action",
+			),
+		),
+	);
+}
+
+function createEntry(entry) {
+	const anchor = document.createElement("a");
+	const icon = document.createElement("span");
+	const text = document.createElement("span");
+	const title = document.createElement("strong");
+	const description = document.createElement("small");
+
+	anchor.className = `entry${entry.protected ? " protected" : ""}`;
+	anchor.href = entry.href;
+	applyRel(anchor, entry.rel);
+	icon.className = "entry-icon";
+	icon.setAttribute("aria-hidden", "true");
+	icon.textContent = entry.icon;
+	title.textContent = entry.title;
+	description.textContent = entry.description;
+	text.append(title, description);
+	anchor.append(icon, text);
+	return anchor;
+}
+
+function createProject(project) {
+	const anchor = document.createElement("a");
+	const title = document.createElement("strong");
+	const description = document.createElement("span");
+	anchor.href = project.href;
+	applyRel(anchor, project.rel);
+	title.textContent = project.title;
+	description.textContent = project.description;
+	anchor.append(title, description);
+	return anchor;
+}
+
+function renderConfiguredSections() {
+	renderBrand();
+	renderNavigation();
+	renderHero();
+	setText("[data-status-label]", siteConfig.status.label);
+	setText("[data-status-copy]", siteConfig.status.copy);
+	setText("[data-activity-eyebrow]", siteConfig.sections.activity.eyebrow);
+	setText("[data-activity-title]", siteConfig.sections.activity.title);
+	setText("[data-summary-source]", siteConfig.sections.activity.loading);
+	setText("[data-projects-eyebrow]", siteConfig.sections.projects.eyebrow);
+	setText("[data-projects-title]", siteConfig.sections.projects.title);
+	setText("[data-blog-eyebrow]", siteConfig.sections.blog.eyebrow);
+	setText("[data-blog-title]", siteConfig.sections.blog.title);
+	setText("[data-blog-source]", siteConfig.sections.blog.loading);
+	setText("[data-boundary-eyebrow]", siteConfig.sections.boundary.eyebrow);
+	setText("[data-boundary-title]", siteConfig.sections.boundary.title);
+	setText("[data-boundary-copy]", siteConfig.sections.boundary.copy);
+
+	document.querySelector("[data-entry-grid]")?.replaceChildren(
+		...siteConfig.entries.map(createEntry),
+	);
+	document.querySelector("[data-project-list]")?.replaceChildren(
+		...siteConfig.sections.projects.items.map(createProject),
+	);
+}
 
 function isTopic(value) {
 	return (
@@ -334,18 +462,20 @@ function createEmptyItem() {
 	const excerpt = document.createElement("p");
 	type.className = "activity-type";
 	type.textContent = "Plaza";
-	title.textContent = "暂无公开动态";
-	excerpt.textContent = "公开聚合接口暂未返回可见内容，Portal 保持可用。";
+	title.textContent = siteConfig.sections.activity.emptyTitle;
+	excerpt.textContent = siteConfig.sections.activity.emptyCopy;
 	item.append(type, title, excerpt);
 	return item;
 }
+
+renderConfiguredSections();
 
 loadPortalSummary()
 	.then(({ summary, source }) => renderSummary(summary, source))
 	.catch(() => {
 		const sourceText = document.querySelector("[data-summary-source]");
 		if (sourceText) {
-			sourceText.textContent = "Plaza 摘要暂不可用，已保留静态入口。";
+			sourceText.textContent = siteConfig.sections.activity.unavailable;
 		}
 	});
 
@@ -354,6 +484,6 @@ loadBlogSummary()
 	.catch(() => {
 		const sourceText = document.querySelector("[data-blog-source]");
 		if (sourceText) {
-			sourceText.textContent = "Blog 摘要暂不可用，保留 Blog 入口。";
+			sourceText.textContent = siteConfig.sections.blog.unavailable;
 		}
 	});

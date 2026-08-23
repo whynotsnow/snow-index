@@ -9,6 +9,7 @@ Developer-facing implementation notes for `snow-index`.
 ## Portal
 
 - [Portal Visual and Content Boundary](portal-visual-content-boundary.md): visual direction, content ownership, Blog/Plaza/Admin boundaries, copy rules, and expansion order.
+- [Portal Content Configuration](portal-content-configuration.md): public static content configuration, editable fields, validation, and private-data boundaries.
 
 ## Deployment
 

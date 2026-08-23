@@ -8,16 +8,35 @@
 			content="WhynotSnow 的主域名 Portal，连接 Blog、Plaza、Projects、RSS 和受保护 Admin。"
 		/>
 		<title>WhynotSnow</title>
+		<link rel="canonical" href="https://whynotsnow.com/" />
+		<meta property="og:site_name" content="WhynotSnow" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="WhynotSnow" />
+		<meta
+			property="og:description"
+			content="WhynotSnow 的主域名 Portal，连接 Blog、Plaza、Projects、RSS 和受保护 Admin。"
+		/>
+		<meta property="og:url" content="https://whynotsnow.com/" />
+		<meta property="og:image" content="https://whynotsnow.com/assets/portal-map.png" />
+		<meta property="og:image:width" content="1672" />
+		<meta property="og:image:height" content="941" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="WhynotSnow" />
+		<meta
+			name="twitter:description"
+			content="WhynotSnow 的主域名 Portal，连接 Blog、Plaza、Projects、RSS 和受保护 Admin。"
+		/>
+		<meta name="twitter:image" content="https://whynotsnow.com/assets/portal-map.png" />
 		<link rel="stylesheet" href="/styles.css" />
 		<script type="module" src="/app.js"></script>
 	</head>
 	<body>
 		<header class="topbar" aria-label="站点导航">
-			<a class="brand" href="/" aria-label="WhynotSnow 首页">
+			<a class="brand" href="/" aria-label="WhynotSnow 首页" data-site-brand>
 				<span class="brand-mark">✳</span>
 				<span>WhynotSnow</span>
 			</a>
-			<nav class="topnav" aria-label="主要入口">
+			<nav class="topnav" aria-label="主要入口" data-site-nav>
 				<a href="https://blog.whynotsnow.com/">Blog</a>
 				<a href="/plaza/">Plaza</a>
 				<a href="#projects">Projects</a>
@@ -30,13 +49,13 @@
 			<section class="hero" aria-labelledby="home-title">
 				<img class="hero-image" src="/assets/portal-map.png" alt="" />
 				<div class="hero-shade"></div>
-				<div class="hero-content">
-					<p class="eyebrow">Public portal</p>
+				<div class="hero-content" data-hero>
+					<p class="eyebrow" data-hero-eyebrow>Public portal</p>
 					<h1 id="home-title">WhynotSnow</h1>
-					<p class="hero-copy">
+					<p class="hero-copy" data-hero-copy>
 						主域名入口，连接长文、广场、项目和公开动态。Blog 回到长内容，Plaza 承接短动态、留言和讨论。
 					</p>
-					<div class="hero-actions" aria-label="核心入口">
+					<div class="hero-actions" aria-label="核心入口" data-hero-actions>
 						<a class="primary-action" href="/plaza/">进入 Plaza</a>
 						<a class="secondary-action" href="https://blog.whynotsnow.com/">阅读 Blog</a>
 					</div>
@@ -46,9 +65,9 @@
 			<section class="status-band" aria-label="当前状态">
 				<div>
 					<span class="status-dot" aria-hidden="true"></span>
-					<span class="status-label">Portal MVP</span>
+					<span class="status-label" data-status-label>Portal MVP</span>
 				</div>
-				<p>Blog 与 Plaza 摘要已接入公开契约；站点状态聚合后续接入。</p>
+				<p data-status-copy>Blog 与 Plaza 摘要已接入公开契约；站点状态聚合后续接入。</p>
 			</section>
 
 			<section class="section-grid" aria-labelledby="entries-title">
@@ -56,7 +75,7 @@
 					<p class="eyebrow">Directory</p>
 					<h2 id="entries-title">入口</h2>
 				</div>
-				<div class="entry-grid">
+				<div class="entry-grid" data-entry-grid>
 					<a class="entry" href="https://blog.whynotsnow.com/">
 						<span class="entry-icon" aria-hidden="true">B</span>
 						<span>
@@ -98,8 +117,8 @@
 			<section class="content-columns" aria-label="公开聚合">
 				<section class="panel" aria-labelledby="recent-title">
 					<div class="panel-head">
-						<p class="eyebrow">Activity</p>
-						<h2 id="recent-title">近期动态</h2>
+						<p class="eyebrow" data-activity-eyebrow>Activity</p>
+						<h2 id="recent-title" data-activity-title>近期动态</h2>
 						<p class="summary-source" data-summary-source>正在读取 Plaza 公开摘要...</p>
 					</div>
 					<ol class="activity-list" data-portal-activity>
@@ -123,10 +142,10 @@
 
 				<section class="panel" id="projects" aria-labelledby="projects-title">
 					<div class="panel-head">
-						<p class="eyebrow">Projects</p>
-						<h2 id="projects-title">项目与服务</h2>
+						<p class="eyebrow" data-projects-eyebrow>Projects</p>
+						<h2 id="projects-title" data-projects-title>项目与服务</h2>
 					</div>
-					<div class="project-list">
+					<div class="project-list" data-project-list>
 						<a href="https://blog.whynotsnow.com/">
 							<strong>Blog</strong>
 							<span>公开长文系统</span>
@@ -144,8 +163,8 @@
 
 				<section class="panel blog-summary" aria-labelledby="blog-summary-title">
 					<div class="panel-head">
-						<p class="eyebrow">Writing</p>
-						<h2 id="blog-summary-title">最近文章</h2>
+						<p class="eyebrow" data-blog-eyebrow>Writing</p>
+						<h2 id="blog-summary-title" data-blog-title>最近文章</h2>
 						<p class="summary-source" data-blog-source>正在读取 Blog 公开摘要...</p>
 					</div>
 					<ol class="activity-list compact-list" data-blog-posts>
@@ -159,9 +178,9 @@
 			</section>
 
 			<section class="boundary" aria-labelledby="boundary-title">
-				<p class="eyebrow">Boundary</p>
-				<h2 id="boundary-title">公开边界</h2>
-				<p>
+				<p class="eyebrow" data-boundary-eyebrow>Boundary</p>
+				<h2 id="boundary-title" data-boundary-title>公开边界</h2>
+				<p data-boundary-copy>
 					这个仓库只承载主域名 Portal 和 Plaza 前端表面。后端 API、审核、D1/R2、Turnstile 服务端验证和私有管理流程保留在
 					`snow-base`。
 				</p>
