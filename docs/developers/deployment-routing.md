@@ -12,7 +12,7 @@ Use a static Cloudflare Pages project for the first production release.
 - Runtime secrets: none in `snow-index`.
 - Public API owner: `snow-base`, exposed through `https://api.whynotsnow.com`.
 
-The current static output also keeps a migration path to Workers Static Assets because the routing files live inside the publish directory.
+The current output keeps static assets in `public/` and uses one Pages Function for `/plaza/t/*` so topic URLs keep their original path while serving the static topic shell.
 
 ## Production Deploy
 
@@ -31,7 +31,7 @@ The workflow:
 - Uses Node.js 22 and pnpm through Corepack.
 - Runs `pnpm install --frozen-lockfile`.
 - Runs `pnpm check`.
-- Direct Uploads `public/` to the Cloudflare Pages project `snow-index` with Wrangler.
+- Direct Uploads `public/` and Pages Functions to the Cloudflare Pages project `snow-index` with Wrangler.
 
 Required GitHub Environment secrets:
 
@@ -82,7 +82,7 @@ Static routes owned by `snow-index`:
 | --- | --- | --- |
 | `/` | `snow-index` | Portal home. |
 | `/plaza/` | `snow-index` | Plaza public list shell. |
-| `/plaza/t/:id` | `snow-index` | Topic detail shell, routed to `/plaza/topic.html`. |
+| `/plaza/t/:id` | `snow-index` | Topic detail shell, served by a Pages Function that preserves the original URL. |
 | `/assets/*` | `snow-index` | Static assets with immutable cache. |
 | `/data/*` | `snow-index` | Public fixture/fallback JSON with short cache. |
 
@@ -100,7 +100,14 @@ Routes explicitly not owned by `snow-index`:
 `public/_redirects`:
 
 - Normalizes `/plaza` to `/plaza/`.
-- Rewrites `/plaza/t/*` to `/plaza/topic.html` with status `200`, allowing topic URLs to work on static hosting.
+
+`public/_routes.json`:
+
+- Limits Pages Function invocation to `/plaza/t/*`.
+
+`functions/plaza/t/[[topic]].js`:
+
+- Serves the static Plaza topic shell through `env.ASSETS.fetch()` while preserving the requested topic URL for client-side topic ID parsing.
 
 `public/_headers`:
 

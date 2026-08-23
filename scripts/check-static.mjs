@@ -14,6 +14,7 @@ const requiredFiles = [
 	"plaza.js",
 	"_redirects",
 	"_headers",
+	"_routes.json",
 	"robots.txt",
 	"sitemap.xml",
 	"assets/portal-map.png",
@@ -36,6 +37,7 @@ const plaza = fs.readFileSync(path.join(publicRoot, "plaza/index.html"), "utf8")
 const plazaTopic = fs.readFileSync(path.join(publicRoot, "plaza/topic.html"), "utf8");
 const redirects = fs.readFileSync(path.join(publicRoot, "_redirects"), "utf8");
 const headers = fs.readFileSync(path.join(publicRoot, "_headers"), "utf8");
+const routes = JSON.parse(fs.readFileSync(path.join(publicRoot, "_routes.json"), "utf8"));
 const robots = fs.readFileSync(path.join(publicRoot, "robots.txt"), "utf8");
 const sitemap = fs.readFileSync(path.join(publicRoot, "sitemap.xml"), "utf8");
 const app = fs.readFileSync(path.join(publicRoot, "app.js"), "utf8");
@@ -218,12 +220,28 @@ if (!redirects.includes("/plaza /plaza/ 301")) {
 	failures.push("Redirects missing /plaza normalization");
 }
 
-if (!redirects.includes("/plaza/t/* /plaza/topic.html 200")) {
-	failures.push("Redirects missing Plaza topic shell fallback");
+if (redirects.includes("/plaza/t/*")) {
+	failures.push("Redirects must not claim Plaza topic routes; Pages Functions preserve topic URLs");
 }
 
 if (redirects.includes("/api") || redirects.includes("/admin")) {
 	failures.push("Redirects must not claim API or Admin routes");
+}
+
+if (routes?.version !== 1 || !Array.isArray(routes.include) || !routes.include.includes("/plaza/t/*")) {
+	failures.push("Routes config must invoke Pages Functions only for Plaza topic routes");
+}
+
+const topicFunction = path.join(process.cwd(), "functions", "plaza", "t", "[[topic]].js");
+if (!fs.existsSync(topicFunction)) {
+	failures.push("Missing Plaza topic Pages Function");
+} else {
+	const topicFunctionSource = fs.readFileSync(topicFunction, "utf8");
+	for (const phrase of ["env.ASSETS.fetch", "/plaza/topic", "onRequest"]) {
+		if (!topicFunctionSource.includes(phrase)) {
+			failures.push(`Plaza topic Pages Function missing ${phrase}`);
+		}
+	}
 }
 
 for (const header of [

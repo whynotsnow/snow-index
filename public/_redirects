@@ -1,4 +1,3 @@
 # Cloudflare Pages / Workers Static Assets routing.
-# Keep static files first; use the dynamic Plaza topic shell only for topic URLs.
+# Keep static files first. Plaza topic URLs are served by Pages Functions.
 /plaza /plaza/ 301
-/plaza/t/* /plaza/topic.html 200
