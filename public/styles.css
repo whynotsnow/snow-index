@@ -482,6 +482,8 @@ h2 {
 
 .topic h2 a:hover,
 .topic h2 a:focus-visible,
+.state-actions a:hover,
+.state-actions a:focus-visible,
 .back-link:hover,
 .back-link:focus-visible {
 	color: #087e9b;
@@ -556,6 +558,25 @@ h2 {
 	flex-wrap: wrap;
 	gap: 8px;
 	margin-top: 18px;
+}
+
+.state-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 14px;
+}
+
+.state-actions a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 36px;
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	padding: 0 12px;
+	background: rgba(255, 255, 255, 0.76);
+	color: #106d90;
+	font-weight: 720;
 }
 
 .state-pill {
