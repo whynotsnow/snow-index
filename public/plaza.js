@@ -1,3 +1,5 @@
+import { siteConfig } from "./site-config.js";
+
 const API_BASE = "https://api.whynotsnow.com";
 const FIXTURE_ENDPOINT = "/data/plaza.fixture.json";
 const FETCH_TIMEOUT_MS = 3200;
@@ -13,6 +15,49 @@ const typeLabels = {
 };
 
 const validTypes = new Set(Object.keys(typeLabels));
+
+function absoluteUrl(path) {
+	return new URL(path, siteConfig.seo.baseUrl).toString();
+}
+
+function setMeta(selector, value) {
+	const element = document.querySelector(selector);
+	if (element && typeof value === "string") {
+		element.setAttribute("content", value);
+	}
+}
+
+function setCanonical(url) {
+	const canonical = document.querySelector("link[rel='canonical']");
+	if (canonical) {
+		canonical.setAttribute("href", url);
+	}
+}
+
+function applyPageMeta(page, url = absoluteUrl(page.path)) {
+	document.title = page.title;
+	setMeta("meta[name='description']", page.description);
+	setCanonical(url);
+	setMeta("meta[property='og:title']", page.title);
+	setMeta("meta[property='og:description']", page.description);
+	setMeta("meta[property='og:url']", url);
+	setMeta("meta[name='twitter:title']", page.title);
+	setMeta("meta[name='twitter:description']", page.description);
+}
+
+function applyTopicMeta(topic) {
+	const title = `${topic.title} · WhynotSnow`;
+	const description = topic.excerpt;
+	const url = absoluteUrl(topic.url);
+	document.title = title;
+	setMeta("meta[name='description']", description);
+	setCanonical(url);
+	setMeta("meta[property='og:title']", title);
+	setMeta("meta[property='og:description']", description);
+	setMeta("meta[property='og:url']", url);
+	setMeta("meta[name='twitter:title']", title);
+	setMeta("meta[name='twitter:description']", description);
+}
 
 function isTopic(value) {
 	return (
@@ -175,15 +220,22 @@ function renderList(topics, source, selectedType) {
 	feed.replaceChildren(
 		...(visible.length > 0
 			? visible.map(createTopicCard)
-			: [createStateCard("暂无公开主题", "当前分类没有可见内容。")])
+			: [createStateCard(
+				selectedType === "all" ? "暂无公开主题" : `${typeLabels[selectedType]} 暂无内容`,
+				selectedType === "all" ? "当前没有可见内容。" : "当前分类没有可见内容。",
+				selectedType === "all" ? [] : [{ label: "查看全部", href: "/plaza/" }],
+			)])
 	);
 
 	if (sourceText) {
-		sourceText.textContent = `主题来源：${source === "public-api" ? "公开 API" : "本地降级"} · ${typeLabels[selectedType]}`;
+		const sourceLabel = source === "public-api"
+			? "公开 API"
+			: "公开 API 暂不可用，已显示本地降级";
+		sourceText.textContent = `主题来源：${sourceLabel} · ${typeLabels[selectedType]}`;
 	}
 }
 
-function createStateCard(title, body) {
+function createStateCard(title, body, actions = []) {
 	const article = document.createElement("article");
 	const content = document.createElement("div");
 	const label = document.createElement("span");
@@ -195,6 +247,17 @@ function createStateCard(title, body) {
 	heading.textContent = title;
 	copy.textContent = body;
 	content.append(label, heading, copy);
+	if (actions.length > 0) {
+		const actionList = document.createElement("div");
+		actionList.className = "state-actions";
+		for (const action of actions) {
+			const link = document.createElement("a");
+			link.href = action.href;
+			link.textContent = action.label;
+			actionList.append(link);
+		}
+		content.append(actionList);
+	}
 	article.append(content);
 	return article;
 }
@@ -242,14 +305,25 @@ async function loadTopicDetail(id) {
 			source: "public-api",
 		};
 	} catch {
-		const fixture = await loadFixture();
+		let fixture;
+		try {
+			fixture = await loadFixture();
+		} catch {
+			const error = new Error("Fallback unavailable");
+			error.code = "fallback-unavailable";
+			throw error;
+		}
 		const topic = fixture.topicDetails?.[id];
 		if (!isTopicDetail(topic)) {
-			throw new Error("Fixture topic not found");
+			const error = new Error("Topic not found");
+			error.code = "not-found";
+			throw error;
 		}
 		const replies = fixture.replies?.[id] ?? [];
 		if (!replies.every(isReply)) {
-			throw new Error("Invalid fixture replies");
+			const error = new Error("Invalid fixture replies");
+			error.code = "fallback-unavailable";
+			throw error;
 		}
 		return { topic, replies, source: "fixture" };
 	}
@@ -264,6 +338,7 @@ function renderTopicDetail(topic, replies, source) {
 	}
 
 	root.replaceChildren(createTopicDetailCard(topic));
+	applyTopicMeta(topic);
 	repliesRoot.replaceChildren(
 		...(replies.length > 0
 			? replies.map(createReplyCard)
@@ -271,7 +346,10 @@ function renderTopicDetail(topic, replies, source) {
 	);
 
 	if (sourceText) {
-		sourceText.textContent = `详情来源：${source === "public-api" ? "公开 API" : "本地降级"}`;
+		const sourceLabel = source === "public-api"
+			? "公开 API"
+			: "公开 API 暂不可用，已显示本地降级";
+		sourceText.textContent = `详情来源：${sourceLabel}`;
 	}
 }
 
@@ -324,6 +402,7 @@ function createPill(text) {
 }
 
 async function initList() {
+	applyPageMeta(siteConfig.seo.pages.plaza);
 	const selectedType = getSelectedType();
 	wireFilters(selectedType);
 	const feed = document.querySelector("[data-plaza-feed]");
@@ -335,19 +414,38 @@ async function initList() {
 }
 
 async function initDetail() {
+	applyPageMeta(siteConfig.seo.pages.plazaTopic, absoluteUrl(window.location.pathname));
 	const id = topicIdFromPath();
 	const root = document.querySelector("[data-topic-detail]");
+	const sourceText = document.querySelector("[data-plaza-source]");
 	if (!id) {
-		root?.replaceChildren(createStateCard("缺少主题 ID", "请从 Plaza 列表进入主题详情。"));
+		root?.replaceChildren(createStateCard("缺少主题 ID", "请从 Plaza 列表进入主题详情。", [
+			{ label: "返回 Plaza", href: "/plaza/" },
+		]));
+		if (sourceText) {
+			sourceText.textContent = "主题详情未加载：缺少公开主题 ID。";
+		}
 		return;
 	}
 	try {
 		const { topic, replies, source } = await loadTopicDetail(id);
 		renderTopicDetail(topic, replies, source);
-	} catch {
-		root?.replaceChildren(createStateCard("主题不存在或不可见", "待审核、隐藏、删除或不存在的主题都会按公开不可见处理。"));
+	} catch (error) {
+		const fallbackUnavailable = error?.code === "fallback-unavailable";
+		root?.replaceChildren(createStateCard(
+			fallbackUnavailable ? "主题暂不可用" : "主题不存在或不可见",
+			fallbackUnavailable
+				? "公开 API 和本地降级数据都无法读取。"
+				: "待审核、隐藏、删除或不存在的主题都会按公开不可见处理。",
+			[{ label: "返回 Plaza", href: "/plaza/" }],
+		));
 		const repliesRoot = document.querySelector("[data-topic-replies]");
-		repliesRoot?.replaceChildren();
+		repliesRoot?.replaceChildren(createStateCard("暂无公开回复", "当前没有可显示的回复。"));
+		if (sourceText) {
+			sourceText.textContent = fallbackUnavailable
+				? "主题详情暂不可用。"
+				: "主题详情未公开。";
+		}
 	}
 }
 
