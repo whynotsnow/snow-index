@@ -50,7 +50,7 @@ jobs:
 
       - name: Verify deployment approval
         env:
-          DEPLOY_APPROVAL_TOKEN: ${{ secrets.SNOW_BASE_DEPLOY_APPROVAL_TOKEN }}
+          DEPLOY_APPROVAL_TOKEN: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
           DEPLOY_APPROVAL_PROJECT: snow-index
           DEPLOY_APPROVAL_TARGET: pages
           DEPLOY_APPROVAL_COMMIT_SHA: ${{ github.sha }}

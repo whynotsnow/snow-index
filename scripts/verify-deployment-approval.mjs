@@ -83,7 +83,7 @@ function delay(ms) {
 
 if (!approvalToken) {
   fail(
-    "缺少 DEPLOY_APPROVAL_TOKEN 或 SNOW_BASE_DEPLOY_APPROVAL_TOKEN。请在 GitHub production Environment secret 中配置部署审批 token。",
+    "缺少 DEPLOY_APPROVAL_TOKEN。请在 GitHub production Environment secret 中配置部署审批 token。旧名称 SNOW_BASE_DEPLOY_APPROVAL_TOKEN 仍可作为兼容回退。",
   );
 }
 
@@ -100,11 +100,11 @@ if (!target || !/^[a-z][a-z0-9-]{0,63}$/u.test(target)) {
 }
 
 if (!Number.isFinite(waitSeconds) || waitSeconds < 1 || waitSeconds > 1800) {
-  fail("SNOW_BASE_DEPLOY_APPROVAL_WAIT_SECONDS 必须是 1 到 1800 之间的秒数。");
+  fail("DEPLOY_APPROVAL_WAIT_SECONDS 必须是 1 到 1800 之间的秒数。");
 }
 
 if (!Number.isFinite(pollSeconds) || pollSeconds < 5 || pollSeconds > 60) {
-  fail("SNOW_BASE_DEPLOY_APPROVAL_POLL_SECONDS 必须是 5 到 60 之间的秒数。");
+  fail("DEPLOY_APPROVAL_POLL_SECONDS 必须是 5 到 60 之间的秒数。");
 }
 
 const requestBody = {
@@ -130,7 +130,7 @@ if (requestResult.response.status === 404) {
   const code = apiErrorCode(requestResult.response, requestResult.body);
   if (code === "missing_scope") {
     fail(
-      "部署审批 token 缺少 deployments:request。请重新创建或轮换 SNOW_BASE_DEPLOY_APPROVAL_TOKEN，并同时勾选 deployments:request 和 deployments:verify。",
+      "部署审批 token 缺少 deployments:request。请重新创建或轮换 DEPLOY_APPROVAL_TOKEN，并同时勾选 deployments:request 和 deployments:verify。",
     );
   }
   fail(`创建部署审批请求失败：${code}`);

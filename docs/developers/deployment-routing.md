@@ -39,8 +39,11 @@ Required GitHub Environment secrets:
 
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
+- `DEPLOY_APPROVAL_TOKEN`
 
 The Cloudflare API token should use the narrowest permissions that can deploy the `snow-index` Pages project and read the account context. Do not write the token, account ID, dashboard URLs, cookies, or raw deployment logs into sidecar records.
+
+`DEPLOY_APPROVAL_TOKEN` is a service token created in `snow-base` Admin with only `deployments:request` and `deployments:verify` scopes. Keep the GitHub secret name generic in this repository because the token is a deployment-approval client credential for `snow-index`, even though the issuing system is `snow-base`.
 
 One-time Cloudflare setup:
 
@@ -48,6 +51,8 @@ One-time Cloudflare setup:
 - Ensure the production branch is `main`.
 - Attach `whynotsnow.com` as the production custom domain.
 - Configure `www.whynotsnow.com` as a host-level redirect to `https://whynotsnow.com`.
+- Register `snow-index` in `snow-base` Admin deployment projects with `pages` as an allowed target.
+- Add `DEPLOY_APPROVAL_TOKEN` to the GitHub `production` Environment secrets.
 
 Emergency local deploys are allowed only with explicit maintainer approval and should still target a commit that has been pushed to the remote repository unless the maintainer explicitly accepts the risk:
 

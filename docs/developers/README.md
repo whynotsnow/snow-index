@@ -14,3 +14,4 @@ Developer-facing implementation notes for `snow-index`.
 ## Deployment
 
 - [Deployment and Routing Boundary](deployment-routing.md): Cloudflare Pages production deploy, domain routing, headers, redirects, preview, and rollback.
+- [Deployment Approval Naming Follow-up](deployment-approval-token-naming.md): current generic secret naming and snow-base follow-up changes.
