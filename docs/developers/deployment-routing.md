@@ -16,7 +16,9 @@ The current output keeps static assets in `public/` and uses one Pages Function 
 
 ## Production Deploy
 
-Follow the same deployment boundary used by `snow-base`: regular production deploys run from GitHub Actions, not from a maintainer laptop.
+Follow the same deployment boundary used by `snow-base`: production deploys must run from GitHub Actions against a commit that has already been pushed to the remote repository.
+
+Do not deploy local working-tree state, unpushed commits, or manually assembled artifacts. Exceptions require an explicit maintainer request or a documented exceptional situation, and must record the source commit, reason, validation, and residual risk.
 
 Workflow:
 
@@ -47,7 +49,7 @@ One-time Cloudflare setup:
 - Attach `whynotsnow.com` as the production custom domain.
 - Configure `www.whynotsnow.com` as a host-level redirect to `https://whynotsnow.com`.
 
-Emergency local deploys are allowed only with explicit maintainer approval:
+Emergency local deploys are allowed only with explicit maintainer approval and should still target a commit that has been pushed to the remote repository unless the maintainer explicitly accepts the risk:
 
 ```bash
 pnpm install --frozen-lockfile

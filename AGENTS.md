@@ -32,6 +32,11 @@ This repository is the planned public portal for `whynotsnow.com`.
 
 Do not claim a command passed unless it was actually run in this workspace and observed.
 
+## Deployment Policy
+
+- Deployment actions must use a commit that has already been pushed to the remote repository and must run through GitHub Actions.
+- Do not deploy directly from a local working tree or an unpushed commit unless there is an explicit maintainer request or a documented exceptional situation.
+
 ## Git Safety
 
 - The workspace may contain user changes. Do not revert changes you did not make unless explicitly requested.

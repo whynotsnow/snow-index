@@ -25,6 +25,13 @@
 - Do not implement sidecar items unless their status is `ready` or `running`.
 - Main-repo commits that directly execute a sidecar item must include `Plan-Item: <id>`. Related non-execution commits may use `Related-Plan: <id>`.
 
+## Deployment execution
+
+- Treat GitHub Actions as the default and required production deployment path.
+- Before any deployment action, confirm the source is a commit already pushed to the remote repository.
+- Do not deploy from local working-tree state, local-only commits, or ad hoc Wrangler commands unless the maintainer explicitly asks for it or the situation is documented as exceptional.
+- When an exception is used, record the reason, source commit, validation performed, and residual risk without storing secrets or raw private logs.
+
 ## Validation truthfulness
 
 Never claim that a command, test, build, browser check, or deployment passed unless it actually ran and produced that result.
