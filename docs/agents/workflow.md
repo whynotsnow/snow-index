@@ -40,6 +40,9 @@ Do not copy local/raw/quarantine contents into tracked docs, sidecar runs, or ha
 - Inspect sidecar items with `pnpm --silent plan:status --json`.
 - Do not implement sidecar items unless their status is `ready` or `running`.
 - Main-repo commits that directly execute a sidecar item must include `Plan-Item: <id>`. Related non-execution commits may use `Related-Plan: <id>`.
+- A main-repo commit must link at most one `Plan-Item` by default.
+- If implementation appears to span multiple sidecar items, split the work into one commit per item.
+- Linking multiple `Plan-Item` trailers in one commit is an exception that requires explicit maintainer approval before committing. The commit message or sidecar run must explain why the work could not be split cleanly.
 
 ## Deployment execution
 

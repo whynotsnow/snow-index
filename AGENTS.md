@@ -24,6 +24,7 @@ This repository is the planned public portal for `whynotsnow.com`.
 - Do not implement sidecar items unless their status is `ready` or `running`.
 - Product source, deployable files, runtime configuration, and product documentation stay in this repository.
 - Main-repo commits that directly execute a sidecar item must include `Plan-Item: <id>`. Related non-execution commits may use `Related-Plan: <id>`.
+- A main-repo commit must link at most one `Plan-Item` by default. Linking multiple `Plan-Item` trailers requires explicit maintainer approval before committing and a detailed explanation of why the work cannot be split into separate commits.
 
 ## Commands
 
@@ -76,3 +77,4 @@ Never play local sound cues from CI or GitHub Actions. The global Codex `Stop` h
 - The workspace may contain user changes. Do not revert changes you did not make unless explicitly requested.
 - Avoid destructive commands such as `git reset --hard` and `git checkout --` unless explicitly requested.
 - Keep changes focused and commit messages Conventional Commits when committing.
+- Keep implementation commits aligned to one sidecar item unless an approved exception is recorded.
