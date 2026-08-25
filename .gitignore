@@ -5,3 +5,6 @@ dist/
 .env
 .env.*
 !.env.example
+.agent-workspace/local/
+.agent-workspace/raw/
+.agent-workspace/quarantine/

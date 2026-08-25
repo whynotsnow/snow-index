@@ -30,6 +30,7 @@ This repository is the planned public portal for `whynotsnow.com`.
 - `pnpm plan:status`: print adjacent sidecar planning board status.
 - `pnpm plan`: start the adjacent sidecar preview board.
 - `pnpm check`: run static project validation.
+- `pnpm agent:validate`: validate Agent Workspace structure and disclosure basics.
 - `pnpm cue:attention`: play the project attention cue before stopping for required user input.
 - `pnpm cue:validation-start`: play before a full or long-running validation flow.
 - `pnpm cue:deploy-start`: play before triggering a production deployment workflow.
@@ -46,6 +47,7 @@ Do not claim a command passed unless it was actually run in this workspace and o
 - Use `docs/README.md` as the documentation router. Do not load every document by default.
 - Before splitting large source files or adding new module files, read `docs/developers/code-organization.md`.
 - Use `docs/agents/testing-strategy.md` to select validation for non-trivial changes.
+- Use `.agent-workspace/manifest.json` and `pnpm agent:validate` for project-local Agent Workspace checks.
 - Keep `docs/agents/*` in English for agent-facing reusable knowledge.
 - Keep `docs/developers/*` in Chinese because developer and operations documents are for human readers.
 - Preserve stable technical identifiers, commands, paths, environment variables, API names, hostnames, and product names in their original form.
@@ -55,6 +57,13 @@ Do not claim a command passed unless it was actually run in this workspace and o
 
 - Deployment actions must use a commit that has already been pushed to the remote repository and must run through GitHub Actions.
 - Do not deploy directly from a local working tree or an unpushed commit unless there is an explicit maintainer request or a documented exceptional situation.
+
+## Agent Workspace
+
+- `.agent-workspace/manifest.json` declares the project-local Agent Workspace contract.
+- `.agent-workspace/tools/agent-workspace.mjs` owns local Agent Workspace validation.
+- `.agent-workspace/local/`, `.agent-workspace/raw/`, and `.agent-workspace/quarantine/` are ignored private local state and must not be tracked or copied into docs, sidecar records, or handoffs.
+- Agent Workspace does not replace `../snow-index.plan`; the sidecar still owns planning items, plans, decisions, runs, validation notes, and handoffs.
 
 ## Sound Cues
 

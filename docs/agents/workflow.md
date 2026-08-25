@@ -9,6 +9,22 @@
 5. Update documentation only when behavior, ownership, constraints, or reusable knowledge changed.
 6. Report changed files, checks run, skipped validation, and material risks.
 
+## Agent Workspace
+
+Use `.agent-workspace/manifest.json` as the project-local Agent Workspace contract. If it declares local tooling, prefer that tooling for workspace checks:
+
+```bash
+pnpm agent:validate
+```
+
+Agent Workspace local state directories are private and ignored:
+
+- `.agent-workspace/local/`
+- `.agent-workspace/raw/`
+- `.agent-workspace/quarantine/`
+
+Do not copy local/raw/quarantine contents into tracked docs, sidecar runs, or handoffs. Agent Workspace does not replace the adjacent planning sidecar; `../snow-index.plan` still owns plan-bound execution records.
+
 ## Documentation maintenance
 
 - Update `project-map.md` for architecture, ownership, or data-flow changes.
@@ -44,6 +60,7 @@ Read only the documents needed for the task:
 | --- | --- |
 | Repository shape, service boundary, or data flow | `docs/agents/project-map.md` |
 | Validation selection | `docs/agents/testing-strategy.md` |
+| Agent Workspace validation or local state boundary | `.agent-workspace/manifest.json`, this file, `docs/agents/disclosure-policy.md` |
 | Large file split or new module organization | `docs/developers/code-organization.md` |
 | Deployment or Pages routing | `docs/developers/deployment-routing.md`, `docs/agents/runtime-requirements.md` |
 | Production recovery or rollback | `docs/developers/recovery.md` |

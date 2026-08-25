@@ -9,9 +9,21 @@ const requiredFiles = [
 	"plaza/index.html",
 	"plaza/topic.html",
 	"styles.css",
+	"styles/tokens.css",
+	"styles/base.css",
+	"styles/portal.css",
+	"styles/plaza.css",
+	"styles/responsive.css",
 	"app.js",
 	"site-config.js",
 	"plaza.js",
+	"plaza/modules/api.js",
+	"plaza/modules/constants.js",
+	"plaza/modules/forms.js",
+	"plaza/modules/meta.js",
+	"plaza/modules/page.js",
+	"plaza/modules/render.js",
+	"plaza/modules/routing.js",
 	"_redirects",
 	"_headers",
 	"_routes.json",
@@ -32,6 +44,14 @@ for (const file of requiredFiles) {
 	}
 }
 
+function readPublicText(file) {
+	return fs.readFileSync(path.join(publicRoot, file), "utf8");
+}
+
+function readPublicTexts(files) {
+	return files.map(readPublicText).join("\n");
+}
+
 const index = fs.readFileSync(path.join(publicRoot, "index.html"), "utf8");
 const plaza = fs.readFileSync(path.join(publicRoot, "plaza/index.html"), "utf8");
 const plazaTopic = fs.readFileSync(path.join(publicRoot, "plaza/topic.html"), "utf8");
@@ -41,8 +61,24 @@ const routes = JSON.parse(fs.readFileSync(path.join(publicRoot, "_routes.json"),
 const robots = fs.readFileSync(path.join(publicRoot, "robots.txt"), "utf8");
 const sitemap = fs.readFileSync(path.join(publicRoot, "sitemap.xml"), "utf8");
 const app = fs.readFileSync(path.join(publicRoot, "app.js"), "utf8");
-const plazaApp = fs.readFileSync(path.join(publicRoot, "plaza.js"), "utf8");
-const styles = fs.readFileSync(path.join(publicRoot, "styles.css"), "utf8");
+const plazaApp = readPublicTexts([
+	"plaza.js",
+	"plaza/modules/api.js",
+	"plaza/modules/constants.js",
+	"plaza/modules/forms.js",
+	"plaza/modules/meta.js",
+	"plaza/modules/page.js",
+	"plaza/modules/render.js",
+	"plaza/modules/routing.js",
+]);
+const styles = readPublicTexts([
+	"styles.css",
+	"styles/tokens.css",
+	"styles/base.css",
+	"styles/portal.css",
+	"styles/plaza.css",
+	"styles/responsive.css",
+]);
 const siteConfigSource = fs.readFileSync(path.join(publicRoot, "site-config.js"), "utf8");
 const deploymentDoc = fs.readFileSync(
 	path.join(process.cwd(), "docs/developers/deployment-routing.md"),
@@ -342,7 +378,7 @@ if (!plazaApp.includes("plaza.fixture.json")) {
 }
 
 for (const phrase of [
-	'import { siteConfig } from "./site-config.js"',
+	'import { siteConfig } from "../../site-config.js"',
 	"applyTopicMeta",
 	"link[rel='canonical']",
 	"twitter:description",

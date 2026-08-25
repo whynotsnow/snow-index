@@ -1,0 +1,15 @@
+{
+  "spec": "agent-workspace",
+  "spec_version": "0.1.0",
+  "conformance": ["core", "disclosure", "tooling"],
+  "public_instructions": "AGENTS.md",
+  "public_knowledge": "docs/agents",
+  "local_state": ".agent-workspace/local",
+  "raw_state": ".agent-workspace/raw",
+  "quarantine_state": ".agent-workspace/quarantine",
+  "planning_sidecar": "../snow-index.plan",
+  "tooling": {
+    "entry": ".agent-workspace/tools/agent-workspace.mjs",
+    "runtime": "node"
+  }
+}

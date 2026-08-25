@@ -12,6 +12,7 @@
     "check": "node scripts/check-static.mjs",
     "plan": "node scripts/dev-plan.mjs",
     "plan:status": "node scripts/plan-status.mjs",
+    "agent:validate": "node .agent-workspace/tools/agent-workspace.mjs validate",
     "cue": "node scripts/codex-cue.mjs",
     "cue:list": "node scripts/codex-cue.mjs list",
     "cue:preview": "node scripts/codex-cue.mjs preview",

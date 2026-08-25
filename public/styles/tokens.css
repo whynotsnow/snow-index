@@ -1,0 +1,19 @@
+:root {
+	color-scheme: light;
+	--bg: #edf8ff;
+	--surface: rgba(255, 255, 255, 0.84);
+	--surface-2: #dff6ff;
+	--line: rgba(48, 92, 132, 0.18);
+	--text: #182643;
+	--muted: #52677f;
+	--soft: #7f93aa;
+	--sky: #63c8f4;
+	--cyan: #37d6e8;
+	--navy: #243657;
+	--coral: #ff8f9d;
+	--sun: #fff5c8;
+	--shadow: rgba(36, 54, 87, 0.14);
+	font-family:
+		Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+		sans-serif;
+}

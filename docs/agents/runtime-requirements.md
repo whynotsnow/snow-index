@@ -11,6 +11,7 @@ Do not record the detected state of a particular developer, machine, or session 
 | Node.js 22+ | Run project scripts | Supported local shell or CI |
 | pnpm 10.22.0 | Install and run package scripts | `pnpm` only |
 | Static check command | Validate current static frontend surface | `pnpm check` |
+| Agent Workspace validation | Validate workspace manifest, ignored local state, and public docs contract | `pnpm agent:validate` |
 | Local preview command | Run the public portal locally | `pnpm dev` |
 | Sidecar status command | Inspect adjacent planning board before executing plan-bound work | `pnpm --silent plan:status --json` |
 | Sidecar preview command | Open the adjacent planning board | `pnpm plan` |
@@ -22,4 +23,4 @@ Resolve current availability at runtime. Treat current detection as more authori
 
 ## Agent Workspace
 
-This project does not currently declare an Agent Workspace manifest or `pnpm agent:validate`. Use Agent Docs validation for documentation structure and disclosure review until a sidecar item explicitly introduces project-local Agent Workspace tooling.
+This project declares `.agent-workspace/manifest.json` and project-local tooling at `.agent-workspace/tools/agent-workspace.mjs`. Use `pnpm agent:validate` for local Agent Workspace checks. Resolve the manifest at runtime and do not substitute bundled skill validation for declared local tooling.

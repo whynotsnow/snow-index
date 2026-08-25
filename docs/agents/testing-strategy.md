@@ -15,7 +15,7 @@ This is the validation-selection contract for agents working in `snow-index`. Va
 
 | Layer | Purpose | Typical scope |
 | --- | --- | --- |
-| L0 Documentation and disclosure | Markdown structure, Agent Docs, sidecar boundary | Changed docs and agent files |
+| L0 Documentation and disclosure | Markdown structure, Agent Docs, Agent Workspace, sidecar boundary | Changed docs and agent files |
 | L1 Static project checks | Required files, fixture shape, public config, metadata, routing files | `pnpm check` |
 | L2 Script syntax checks | Node script parseability for tooling and CI helpers | `node --check scripts/<file>.mjs` |
 | L3 Local static preview | Rendered static pages through local server | `pnpm dev` plus targeted HTTP/browser checks |
@@ -26,8 +26,9 @@ This is the validation-selection contract for agents working in `snow-index`. Va
 
 | Change class | Required starting checks | Add when applicable |
 | --- | --- | --- |
-| Documentation only | Agent Docs validation | Command verification if command examples changed |
-| `AGENTS.md` or agent docs | Agent Docs validation; `pnpm check` if commands or required files changed | Sidecar validation when plan workflow changes |
+| Documentation only | Agent Docs validation | `pnpm agent:validate` when Agent Workspace, disclosure, or local-state rules changed |
+| `AGENTS.md` or agent docs | Agent Docs validation; `pnpm agent:validate`; `pnpm check` if commands or required files changed | Sidecar validation when plan workflow changes |
+| `.agent-workspace/*` | `pnpm agent:validate`; Agent Docs validation | `pnpm check` when package scripts or docs references changed |
 | Public HTML/CSS | `pnpm check` | Local browser or screenshot smoke for layout, interaction, or responsive changes |
 | Public JS | `pnpm check`; relevant `node --check` only for Node scripts | Local browser smoke for DOM behavior, API fetch, filters, forms, or topic parsing |
 | Public data fixtures | `pnpm check` | Local preview when fixture drives rendered behavior |
