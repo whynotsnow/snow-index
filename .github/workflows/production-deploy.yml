@@ -48,5 +48,16 @@ jobs:
       - name: Check static portal
         run: pnpm check
 
+      - name: Verify deployment approval
+        env:
+          DEPLOY_APPROVAL_TOKEN: ${{ secrets.SNOW_BASE_DEPLOY_APPROVAL_TOKEN }}
+          DEPLOY_APPROVAL_PROJECT: snow-index
+          DEPLOY_APPROVAL_TARGET: pages
+          DEPLOY_APPROVAL_COMMIT_SHA: ${{ github.sha }}
+          DEPLOY_APPROVAL_REQUEST_SOURCE: github-actions
+          DEPLOY_APPROVAL_REQUEST_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DEPLOY_APPROVAL_WAIT_SECONDS: "900"
+        run: node scripts/verify-deployment-approval.mjs
+
       - name: Deploy Cloudflare Pages
         run: pnpm exec wrangler pages deploy public --project-name snow-index --branch main --commit-hash "${GITHUB_SHA}" --commit-message "${GITHUB_SHA}" --commit-dirty=false
