@@ -3,6 +3,7 @@ import { siteConfig } from "./site-config.js";
 const API_BASE = "https://api.whynotsnow.com";
 const FIXTURE_ENDPOINT = "/data/plaza.fixture.json";
 const FETCH_TIMEOUT_MS = 3200;
+const POST_TIMEOUT_MS = 12000;
 const TURNSTILE_READY_TIMEOUT_MS = 10000;
 
 const typeLabels = {
@@ -126,7 +127,7 @@ async function fetchJson(url) {
 
 async function postJson(url, body) {
 	const controller = new AbortController();
-	const timeout = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+	const timeout = window.setTimeout(() => controller.abort(), POST_TIMEOUT_MS);
 	try {
 		const response = await fetch(url, {
 			method: "POST",
