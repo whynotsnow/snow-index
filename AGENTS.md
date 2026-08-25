@@ -29,13 +29,38 @@ This repository is the planned public portal for `whynotsnow.com`.
 
 - `pnpm plan:status`: print adjacent sidecar planning board status.
 - `pnpm plan`: start the adjacent sidecar preview board.
+- `pnpm check`: run static project validation.
+- `pnpm cue:attention`: play the project attention cue before stopping for required user input.
+- `pnpm cue:validation-start`: play before a full or long-running validation flow.
+- `pnpm cue:deploy-start`: play before triggering a production deployment workflow.
+- `pnpm cue:deploy-approval`: play while locally monitoring a production deployment waiting for approval.
+- `pnpm cue:deploy-pass`: play after production deployment completes successfully.
+- `pnpm cue:deploy-fail`: play after production deployment fails and needs attention.
+- `pnpm cue:tests-pass`: play after a meaningful validation pass.
+- `pnpm cue:tests-fail`: play after a validation failure that needs attention.
 
 Do not claim a command passed unless it was actually run in this workspace and observed.
+
+## Documentation Rules
+
+- Use `docs/README.md` as the documentation router. Do not load every document by default.
+- Before splitting large source files or adding new module files, read `docs/developers/code-organization.md`.
+- Use `docs/agents/testing-strategy.md` to select validation for non-trivial changes.
+- Keep `docs/agents/*` in English for agent-facing reusable knowledge.
+- Keep `docs/developers/*` in Chinese because developer and operations documents are for human readers.
+- Preserve stable technical identifiers, commands, paths, environment variables, API names, hostnames, and product names in their original form.
+- Do not add new root Markdown files unless they are root-level entry points such as `README.md` or `AGENTS.md`.
 
 ## Deployment Policy
 
 - Deployment actions must use a commit that has already been pushed to the remote repository and must run through GitHub Actions.
 - Do not deploy directly from a local working tree or an unpushed commit unless there is an explicit maintainer request or a documented exceptional situation.
+
+## Sound Cues
+
+Use sound cues sparingly and only for attention-worthy events. Do not play cues for ordinary reading, searching, editing, formatting, or intermediate progress. Read `docs/agents/sound-cues.md` before using or modifying cue behavior.
+
+Never play local sound cues from CI or GitHub Actions. The global Codex `Stop` hook already plays the `done` cue at turn completion, so do not manually play `done` for routine responses.
 
 ## Git Safety
 

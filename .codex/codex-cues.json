@@ -1,0 +1,64 @@
+{
+  "enabled": true,
+  "mode": "sound",
+  "preset": "ping",
+  "text": "任务完成",
+  "volume": 3,
+  "cooldown_seconds": 2,
+  "events": {
+    "done": {
+      "mode": "both",
+      "preset": "ping",
+      "volume": 3,
+      "text": "任务完成"
+    },
+    "attention": {
+      "mode": "both",
+      "preset": "tink",
+      "volume": 4,
+      "text": "需要你处理"
+    },
+    "validation-start": {
+      "mode": "both",
+      "preset": "pop",
+      "volume": 3,
+      "text": "开始验证"
+    },
+    "deploy-approval": {
+      "mode": "both",
+      "preset": "tink",
+      "volume": 5,
+      "text": "生产部署等待审批"
+    },
+    "deploy-start": {
+      "mode": "both",
+      "preset": "ping",
+      "volume": 4,
+      "text": "开始部署"
+    },
+    "deploy-pass": {
+      "mode": "both",
+      "preset": "hero",
+      "volume": 4,
+      "text": "部署完成"
+    },
+    "deploy-fail": {
+      "mode": "both",
+      "preset": "submarine",
+      "volume": 5,
+      "text": "部署失败"
+    },
+    "tests-pass": {
+      "mode": "both",
+      "preset": "hero",
+      "volume": 3,
+      "text": "验证通过"
+    },
+    "tests-fail": {
+      "mode": "both",
+      "preset": "submarine",
+      "volume": 5,
+      "text": "验证失败"
+    }
+  }
+}

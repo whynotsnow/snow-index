@@ -11,7 +11,20 @@
     "dev": "node scripts/dev-server.mjs",
     "check": "node scripts/check-static.mjs",
     "plan": "node scripts/dev-plan.mjs",
-    "plan:status": "node scripts/plan-status.mjs"
+    "plan:status": "node scripts/plan-status.mjs",
+    "cue": "node scripts/codex-cue.mjs",
+    "cue:list": "node scripts/codex-cue.mjs list",
+    "cue:preview": "node scripts/codex-cue.mjs preview",
+    "cue:show": "node scripts/codex-cue.mjs show",
+    "cue:done": "node scripts/codex-cue.mjs done",
+    "cue:attention": "node scripts/codex-cue.mjs attention",
+    "cue:validation-start": "node scripts/codex-cue.mjs validation-start",
+    "cue:deploy-start": "node scripts/codex-cue.mjs deploy-start",
+    "cue:deploy-approval": "node scripts/codex-cue.mjs deploy-approval",
+    "cue:deploy-pass": "node scripts/codex-cue.mjs deploy-pass",
+    "cue:deploy-fail": "node scripts/codex-cue.mjs deploy-fail",
+    "cue:tests-pass": "node scripts/codex-cue.mjs tests-pass",
+    "cue:tests-fail": "node scripts/codex-cue.mjs tests-fail"
   },
   "devDependencies": {
     "wrangler": "^4.125.0"

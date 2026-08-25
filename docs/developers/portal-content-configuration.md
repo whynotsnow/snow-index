@@ -1,19 +1,19 @@
-# Portal Content Configuration
+# Portal 内容配置
 
-`public/site-config.js` owns public, operator-editable Portal content.
+`public/site-config.js` 拥有公开且可由维护者编辑的 Portal 内容。
 
-Use it for:
+适合放入这里的内容：
 
-- Top navigation and hero actions.
-- Directory entries and project links.
-- Stable Portal, Plaza, Blog, and boundary copy.
-- Public site title and description values that can be reused by metadata.
+- 顶部导航和 hero actions。
+- 目录入口和项目链接。
+- 稳定的 Portal、Plaza、Blog 和边界说明文案。
+- 可被 metadata 复用的公开站点标题和描述。
 
-Do not use it for:
+不要放入这里的内容：
 
-- Credentials, tokens, cookies, Access JWTs, or service keys.
-- Private admin workflows, moderation notes, raw logs, D1/R2 object keys, or internal API details.
-- Blog long-form content; Blog remains owned by `blog.whynotsnow.com`.
-- Backend API contracts owned by `snow-base`.
+- credentials、tokens、cookies、Access JWTs 或 service keys。
+- 私有 admin 工作流、moderation notes、raw logs、D1/R2 object keys 或内部 API 细节。
+- Blog 长文内容；Blog 仍由 `blog.whynotsnow.com` 拥有。
+- `snow-base` 拥有的后端 API contracts。
 
-The homepage keeps static fallback markup, then `public/app.js` renders the configured content when JavaScript loads. `pnpm check` validates required fields, duplicate IDs, and public URL shape.
+首页保留静态 fallback markup；JavaScript 加载后，`public/app.js` 会渲染配置中的内容。`pnpm check` 会验证必填字段、重复 ID 和公开 URL shape。

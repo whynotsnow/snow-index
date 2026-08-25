@@ -1,60 +1,60 @@
-# Deployment and Routing Boundary
+# 部署和路由边界
 
-This document records the first deployable boundary for `snow-index`.
+本文档记录 `snow-index` 当前可部署边界。
 
-## Hosting Target
+## 托管目标
 
-Use a static Cloudflare Pages project for the first production release.
+生产版本使用静态 Cloudflare Pages project。
 
-- Project source: this repository.
-- Build command: `pnpm check`.
-- Publish directory: `public`.
-- Runtime secrets: none in `snow-index`.
-- Public API owner: `snow-base`, exposed through `https://api.whynotsnow.com`.
+- 项目源码：本仓库。
+- Build command：`pnpm check`。
+- Publish directory：`public`。
+- Runtime secrets：`snow-index` 不持有。
+- Public API owner：`snow-base`，通过 `https://api.whynotsnow.com` 暴露。
 
-The current output keeps static assets in `public/` and uses one Pages Function for `/plaza/t/*` so topic URLs keep their original path while serving the static topic shell.
+当前输出将静态资源保留在 `public/`，并为 `/plaza/t/*` 使用一个 Pages Function，使 topic URL 在服务静态 topic shell 时仍保留原始路径。
 
-## Production Deploy
+## 生产部署
 
-Follow the same deployment boundary used by `snow-base`: production deploys must run from GitHub Actions against a commit that has already been pushed to the remote repository.
+遵循与 `snow-base` 一致的部署边界：生产部署必须通过 GitHub Actions 执行，来源必须是已经推送到远端仓库的 commit。
 
-Do not deploy local working-tree state, unpushed commits, or manually assembled artifacts. Exceptions require an explicit maintainer request or a documented exceptional situation, and must record the source commit, reason, validation, and residual risk.
+不要部署本地 working-tree 状态、未推送 commit 或手工拼装的 artifacts。例外情况需要维护者明确要求，或记录为异常场景，并说明 source commit、原因、验证和残余风险。
 
-Workflow:
+Workflow：
 
 ```text
 .github/workflows/production-deploy.yml
 ```
 
-The workflow:
+该 workflow：
 
-- Requires the GitHub Environment named `production`.
-- Verifies the checked-out commit matches `origin/main`.
-- Uses Node.js 22 and pnpm through Corepack.
-- Runs `pnpm install --frozen-lockfile`.
-- Runs `pnpm check`.
-- Direct Uploads `public/` and Pages Functions to the Cloudflare Pages project `snow-index` with Wrangler.
+- 需要名为 `production` 的 GitHub Environment。
+- 校验 checked-out commit 与 `origin/main` 一致。
+- 通过 Corepack 使用 Node.js 22 和 pnpm。
+- 运行 `pnpm install --frozen-lockfile`。
+- 运行 `pnpm check`。
+- 使用 Wrangler 将 `public/` 和 Pages Functions Direct Upload 到 Cloudflare Pages project `snow-index`。
 
-Required GitHub Environment secrets:
+必需 GitHub Environment secrets：
 
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
 - `DEPLOY_APPROVAL_TOKEN`
 
-The Cloudflare API token should use the narrowest permissions that can deploy the `snow-index` Pages project and read the account context. Do not write the token, account ID, dashboard URLs, cookies, or raw deployment logs into sidecar records.
+Cloudflare API token 应使用能部署 `snow-index` Pages project 并读取 account context 的最小权限。不要把 token、account ID、dashboard URLs、cookies 或 raw deployment logs 写入 sidecar records。
 
-`DEPLOY_APPROVAL_TOKEN` is a service token created in `snow-base` Admin with only `deployments:request` and `deployments:verify` scopes. Keep the GitHub secret name generic in this repository because the token is a deployment-approval client credential for `snow-index`, even though the issuing system is `snow-base`.
+`DEPLOY_APPROVAL_TOKEN` 是在 `snow-base` Admin 中创建的 service token，只应具备 `deployments:request` 和 `deployments:verify` scopes。虽然签发系统是 `snow-base`，但该 token 是 `snow-index` 的 deployment-approval client credential，因此本仓库使用通用 GitHub secret 名称。
 
-One-time Cloudflare setup:
+一次性 Cloudflare 配置：
 
-- Create or confirm the Cloudflare Pages project named `snow-index`.
-- Ensure the production branch is `main`.
-- Attach `whynotsnow.com` as the production custom domain.
-- Configure `www.whynotsnow.com` as a host-level redirect to `https://whynotsnow.com`.
-- Register `snow-index` in `snow-base` Admin deployment projects with `pages` as an allowed target.
-- Add `DEPLOY_APPROVAL_TOKEN` to the GitHub `production` Environment secrets.
+- 创建或确认名为 `snow-index` 的 Cloudflare Pages project。
+- 确认 production branch 是 `main`。
+- 将 `whynotsnow.com` 绑定为 production custom domain。
+- 将 `www.whynotsnow.com` 配置为 host-level redirect，目标是 `https://whynotsnow.com`。
+- 在 `snow-base` Admin deployment projects 中注册 `snow-index`，并允许 target `pages`。
+- 将 `DEPLOY_APPROVAL_TOKEN` 添加到 GitHub `production` Environment secrets。
 
-Emergency local deploys are allowed only with explicit maintainer approval and should still target a commit that has been pushed to the remote repository unless the maintainer explicitly accepts the risk:
+Emergency local deploy 仅在维护者明确批准时允许。除非维护者明确接受风险，否则仍应以已推送到远端仓库的 commit 为目标：
 
 ```bash
 pnpm install --frozen-lockfile
@@ -62,38 +62,38 @@ pnpm check
 pnpm exec wrangler pages deploy public --project-name snow-index --branch main
 ```
 
-Record the reason, source commit, and sanitized validation result after any emergency local deploy.
+任何 emergency local deploy 完成后，都要记录原因、source commit 和 sanitized validation result。
 
-## Domains
+## 域名
 
-Production should attach the apex domain:
+生产环境应绑定 apex domain：
 
 ```text
 whynotsnow.com
 ```
 
-Use `www.whynotsnow.com` only as a redirecting alias. Configure host-level `www` to apex redirection in Cloudflare Bulk Redirects or an equivalent zone rule, not in this repository's `_redirects`, because `_redirects` is path routing inside the deployed site.
+`www.whynotsnow.com` 只作为 redirecting alias 使用。`www` 到 apex 的重定向应在 Cloudflare Bulk Redirects 或等价 zone rule 中配置，不应放在本仓库 `_redirects` 中，因为 `_redirects` 是部署站点内部的 path routing。
 
-Existing service boundaries remain external links or API origins:
+现有服务边界保持为外部链接或 API origins：
 
-- `blog.whynotsnow.com`: Blog long-form content.
-- `api.whynotsnow.com`: public `snow-base` API.
-- `admin.whynotsnow.com`: protected Admin entry.
-- Image, comments, and other service hostnames remain owned by their existing projects.
+- `blog.whynotsnow.com`：Blog 长文内容。
+- `api.whynotsnow.com`：公开 `snow-base` API。
+- `admin.whynotsnow.com`：受保护 Admin 入口。
+- 图片、评论和其他 service hostnames 继续由既有项目拥有。
 
-## Routes
+## 路由
 
-Static routes owned by `snow-index`:
+`snow-index` 拥有的静态路由：
 
 | Route | Owner | Behavior |
 | --- | --- | --- |
-| `/` | `snow-index` | Portal home. |
-| `/plaza/` | `snow-index` | Plaza public list shell. |
-| `/plaza/t/:id` | `snow-index` | Topic detail shell, served by a Pages Function that preserves the original URL. |
-| `/assets/*` | `snow-index` | Static assets with immutable cache. |
-| `/data/*` | `snow-index` | Public fixture/fallback JSON with short cache. |
+| `/` | `snow-index` | Portal 首页。 |
+| `/plaza/` | `snow-index` | Plaza public list shell。 |
+| `/plaza/t/:id` | `snow-index` | Topic detail shell，由 Pages Function 服务并保留原始 URL。 |
+| `/assets/*` | `snow-index` | 静态 assets，使用 immutable cache。 |
+| `/data/*` | `snow-index` | 公开 fixture/fallback JSON，使用 short cache。 |
 
-Routes explicitly not owned by `snow-index`:
+明确不属于 `snow-index` 的路由：
 
 | Route/Host | Owner |
 | --- | --- |
@@ -102,41 +102,41 @@ Routes explicitly not owned by `snow-index`:
 | Blog article routes | Blog project |
 | D1/R2/Admin moderation internals | `snow-base` |
 
-## Routing Files
+## 路由文件
 
 `public/_redirects`:
 
-- Normalizes `/plaza` to `/plaza/`.
+- 将 `/plaza` 规范化到 `/plaza/`。
 
 `public/_routes.json`:
 
-- Limits Pages Function invocation to `/plaza/t/*`.
+- 将 Pages Function invocation 限制到 `/plaza/t/*`。
 
 `functions/plaza/t/[[topic]].js`:
 
-- Serves the static Plaza topic shell through `env.ASSETS.fetch()` while preserving the requested topic URL for client-side topic ID parsing.
+- 通过 `env.ASSETS.fetch()` 服务静态 Plaza topic shell，同时保留 requested topic URL，供客户端解析 topic ID。
 
 `public/_headers`:
 
-- Adds security headers for static pages.
-- Allows frontend fetches only to same-origin and `https://api.whynotsnow.com`.
-- Pre-allows Cloudflare Turnstile script/frame origins for the future public submit flow.
-- Gives `/assets/*` long immutable cache and `/data/*` short cache.
+- 为静态页面添加 security headers。
+- 仅允许 frontend fetch same-origin 和 `https://api.whynotsnow.com`。
+- 为未来 public submit flow 预先允许 Cloudflare Turnstile script/frame origins。
+- 为 `/assets/*` 设置 long immutable cache，为 `/data/*` 设置 short cache。
 
 ## Preview
 
-Preview deployments must not require private tokens or protected APIs. Plaza and Portal pages must keep fixture fallback behavior when `api.whynotsnow.com` is unavailable, blocked by CORS, or not yet populated.
+Preview deployments 不得依赖 private tokens 或 protected APIs。当 `api.whynotsnow.com` 不可用、被 CORS 阻止或尚未有数据时，Plaza 和 Portal 页面必须保留 fixture fallback 行为。
 
-## Rollback
+## 回滚
 
-Rollback should use the hosting provider's previous deployment rollback when available. Avoid changing DNS as the first rollback step; detaching or repointing a custom domain can create activation delays. If the new Plaza path behavior fails, revert the deployment containing `_redirects` and keep `/` available as the minimal Portal.
+可用时，rollback 应优先使用托管平台的 previous deployment rollback。避免把 DNS 改动作为第一步；解绑或重指向 custom domain 可能产生额外生效延迟。如果新的 Plaza path 行为失败，回滚包含 `_redirects` 的 deployment，并保持 `/` 作为最小可用 Portal。
 
-## Production Checklist
+## 生产检查清单
 
-- `pnpm check` passes.
-- GitHub Actions `Production Deploy` passes from `origin/main`.
-- `/`, `/plaza/`, and `/plaza/t/<known-topic>` render in preview.
-- Custom domain `whynotsnow.com` is attached to the static hosting project.
-- `www.whynotsnow.com` redirects to `https://whynotsnow.com`.
-- `api.whynotsnow.com` allows the production origin in CORS for public Plaza endpoints.
-- No `snow-index` environment variable contains secrets, service tokens, Turnstile secret, cookies, raw logs, or private hostnames.
+- `pnpm check` 通过。
+- GitHub Actions `Production Deploy` 从 `origin/main` 成功运行。
+- `/`、`/plaza/` 和 `/plaza/t/<known-topic>` 在 preview 中渲染。
+- custom domain `whynotsnow.com` 已绑定到静态托管项目。
+- `www.whynotsnow.com` 重定向到 `https://whynotsnow.com`。
+- `api.whynotsnow.com` 的 public Plaza endpoints 允许 production origin CORS。
+- `snow-index` environment variable 不包含 secrets、service tokens、Turnstile secret、cookies、raw logs 或 private hostnames。

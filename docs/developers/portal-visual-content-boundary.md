@@ -1,108 +1,108 @@
-# Portal Visual and Content Boundary
+# Portal 视觉和内容边界
 
-This document records the durable visual and content direction for the `whynotsnow.com` Portal.
+本文档记录 `whynotsnow.com` Portal 的长期视觉和内容方向。
 
-## Decision
+## 决策
 
-`snow-index` should use an independent Portal visual language: related to Blog through tone and public identity, but not a copy of the Blog article reading experience.
+`snow-index` 应使用独立的 Portal 视觉语言：在气质和公开身份上与 Blog 有关联，但不要复制 Blog 的文章阅读体验。
 
-The current direction is:
+当前方向：
 
-- Sky/cyan/navy/light cloud palette.
-- Dense but calm navigation surface.
-- First viewport focused on identity, primary routes, and current status.
-- Plaza preview as public activity, not as a replacement for the Plaza list/detail pages.
-- Abstract Portal map imagery for the public entry surface.
+- Sky/cyan/navy/light cloud 色彩系统。
+- 信息密度较高但平静的导航界面。
+- 首屏聚焦身份、主要路径和当前状态。
+- Plaza preview 作为公开活动摘要，而不是替代 Plaza list/detail 页面。
+- 使用抽象 Portal map 图像作为公开入口视觉资产。
 
-## Recommendation
+## 建议
 
-Keep this project closer to a personal digital-space dashboard than a marketing landing page.
+让本项目更接近个人数字空间 dashboard，而不是营销 landing page。
 
-That means:
+具体意味着：
 
-- Prefer compact labels, status, activity, and route cards over long explanations.
-- Keep `WhynotSnow` visible as the first-viewport identity signal.
-- Keep core routes visible without scrolling: Blog, Plaza, Projects, RSS, Admin.
-- Use short operational copy that explains public state and fallback behavior.
-- Let visual polish come from spacing, hierarchy, color, and one strong visual asset rather than decorative sections.
+- 优先使用紧凑 labels、status、activity 和 route cards，而不是长段解释。
+- 保持 `WhynotSnow` 作为首屏可见的身份信号。
+- 核心路径不滚动也应可见：Blog、Plaza、Projects、RSS、Admin。
+- 使用短的操作性文案解释公开状态和 fallback 行为。
+- 视觉精致感应来自 spacing、hierarchy、color 和一个强视觉资产，而不是装饰性 sections。
 
-## Content Ownership
+## 内容归属
 
-| Content | Owner | Portal Behavior |
+| 内容 | 归属 | Portal 行为 |
 | --- | --- | --- |
-| Site identity | `snow-index` | Short first-screen statement and navigation context. |
-| Long articles | Blog | Link out to Blog; do not duplicate article content. |
-| Short public activity | Plaza / `snow-base` public API | Preview visible public DTOs only. |
-| Project/service directory | `snow-index` | Show public route cards and stable external entries. |
-| Admin workflows | `snow-base` / protected Admin | Show only protected entry, no internal tool list. |
-| Comments/Twikoo | `snow-base` or Blog integration | Future public summaries only if sanitized. |
-| Status/now text | `snow-index` initially, Plaza/status later | Keep short and replaceable by public DTOs later. |
+| 站点身份 | `snow-index` | 短首屏说明和导航上下文。 |
+| 长文章 | Blog | 链接到 Blog；不复制文章内容。 |
+| 短公开活动 | Plaza / `snow-base` public API | 只预览公开 DTO。 |
+| 项目/服务目录 | `snow-index` | 展示公开 route cards 和稳定外部入口。 |
+| Admin 工作流 | `snow-base` / protected Admin | 只展示受保护入口，不展示内部工具清单。 |
+| Comments/Twikoo | `snow-base` 或 Blog integration | 未来仅在 sanitized 后展示公开摘要。 |
+| Status/now text | 初期由 `snow-index` 拥有，后续可由 Plaza/status 提供 | 保持简短，并可被后续公开 DTO 替换。 |
 
-## Blog Boundary
+## Blog 边界
 
-Blog remains the long-form reading system.
+Blog 仍是长文阅读系统。
 
-Do not move these into Portal:
+不要把这些内容移入 Portal：
 
-- Full posts or article collections.
-- Long personal biography.
-- Blog theme-specific reading components.
-- Comments as a Blog-wide community surface.
+- 完整文章或文章集合。
+- 长篇个人简介。
+- Blog theme-specific 阅读组件。
+- 作为 Blog-wide community surface 的 comments。
 
-Portal may link to Blog and later show a short public recent-post summary if a stable feed or DTO exists.
+Portal 可以链接到 Blog；如果后续有稳定 feed 或 DTO，也可以展示短的公开 recent-post summary。
 
-## Plaza Boundary
+## Plaza 边界
 
-Plaza is the public community/activity layer.
+Plaza 是公开社区/活动层。
 
-Portal may show:
+Portal 可以展示：
 
-- Pinned notices.
-- Recent public topics.
-- Public counts and timestamps.
-- Entry points to `/plaza/` and `/plaza/t/:id`.
+- pinned notices。
+- recent public topics。
+- public counts 和 timestamps。
+- 指向 `/plaza/` 和 `/plaza/t/:id` 的入口。
 
-Portal must not show:
+Portal 不得展示：
 
-- Pending, hidden, deleted, or moderation-only content.
-- Admin review notes.
-- D1/R2 internals.
-- Turnstile secret, service tokens, raw logs, or protected Access state.
+- pending、hidden、deleted 或 moderation-only content。
+- Admin review notes。
+- D1/R2 internals。
+- Turnstile secret、service tokens、raw logs 或 protected Access state。
 
-## Visual Rules
+## 视觉规则
 
-- Keep cards at 8px border radius or less.
-- Use navy text on light cloud surfaces for contrast.
-- Use cyan for public navigation, active state, and system status.
-- Use coral/pink only for secondary emphasis such as locked, pending, or protected states.
-- Avoid long hero copy, marketing claims, large feature sections, and decorative one-off sections.
-- Do not use the Blog reference image directly as a Portal asset; only reuse its color language.
-- Keep `public/assets/portal-map.png` or a future equivalent as a subject-bearing image, not a generic gradient.
+- Cards 的 border radius 保持 8px 或更低。
+- 在 light cloud surfaces 上使用 navy text 保证对比。
+- cyan 用于公开导航、active state 和 system status。
+- coral/pink 只用于 locked、pending 或 protected states 等次级强调。
+- 避免长 hero copy、marketing claims、大 feature sections 和一次性装饰 sections。
+- 不要直接把 Blog reference image 当作 Portal asset；只复用它的色彩语言。
+- 保留 `public/assets/portal-map.png` 或未来等价视觉资产作为有主题的图像，不使用泛用 gradient 代替。
 
-## Copy Rules
+## 文案规则
 
-Use short, concrete interface copy.
+使用短且具体的界面文案。
 
-Preferred:
+推荐：
 
 - "Plaza 摘要已接入公开契约；Blog 和站点状态聚合后续接入。"
 - "受保护入口，不展示内部工具。"
 - "提交成功后进入审核队列。"
 
-Avoid:
+避免：
 
-- Long personal essays on the home page.
-- Product-marketing promises.
-- Internal implementation details in visitor-facing copy.
-- Any secret, private URL, raw log, cookie, token, or Access identifier.
+- 在首页放长篇个人叙述。
+- 产品营销式承诺。
+- 面向访客的文案中出现内部实现细节。
+- 任何 secret、private URL、raw log、cookie、token 或 Access identifier。
 
-## Expansion Rules
+## 扩展顺序
 
-Future additions should land in this order:
+未来新增模块建议按以下顺序落地：
 
-1. Public Blog summary from the existing Blog RSS feed with fixture fallback.
-2. Public site status or now text from a static config or public endpoint.
-3. Optional public comments/Twikoo summary only after `snow-base` provides a sanitized adapter.
-4. Visual asset refresh after content modules stabilize.
+1. 基于现有 Blog RSS feed 的 public Blog summary，并保留 fixture fallback。
+2. 来自 static config 或 public endpoint 的 public site status / now text。
+3. 只有在 `snow-base` 提供 sanitized adapter 后，才考虑可选的 public comments/Twikoo summary。
+4. 内容模块稳定后再刷新视觉资产。
 
-If a new module does not fit these ownership rules, add or update a sidecar item before implementing it.
+如果新模块不符合这些归属规则，先新增或更新 sidecar item，再进入实现。

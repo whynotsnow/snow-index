@@ -5,7 +5,7 @@
 1. Read root instructions and only the task-relevant documentation.
 2. Inspect the current working tree before editing.
 3. Make the smallest coherent change.
-4. Run the narrowest meaningful validation.
+4. Use `docs/agents/testing-strategy.md` to choose the narrowest meaningful validation.
 5. Update documentation only when behavior, ownership, constraints, or reusable knowledge changed.
 6. Report changed files, checks run, skipped validation, and material risks.
 
@@ -35,3 +35,22 @@
 ## Validation truthfulness
 
 Never claim that a command, test, build, browser check, or deployment passed unless it actually ran and produced that result.
+
+## Documentation routing
+
+Read only the documents needed for the task:
+
+| Task area | Read |
+| --- | --- |
+| Repository shape, service boundary, or data flow | `docs/agents/project-map.md` |
+| Validation selection | `docs/agents/testing-strategy.md` |
+| Large file split or new module organization | `docs/developers/code-organization.md` |
+| Deployment or Pages routing | `docs/developers/deployment-routing.md`, `docs/agents/runtime-requirements.md` |
+| Production recovery or rollback | `docs/developers/recovery.md` |
+| Known runtime or routing failures | `docs/developers/troubleshooting.md`, `docs/agents/runtime-playbook.md`, `docs/agents/failure-index.md` |
+| Cue behavior | `docs/agents/sound-cues.md` |
+| Public/private boundary | `docs/agents/disclosure-policy.md` |
+
+## Sound cues
+
+Use project sound cues only for attention-worthy events. Do not play cues for ordinary reading, searching, editing, formatting, or intermediate progress. Read `docs/agents/sound-cues.md` before using or modifying cue behavior.

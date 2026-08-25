@@ -258,11 +258,11 @@ for (const header of [
 }
 
 for (const phrase of [
-	"Publish directory: `public`",
+	"Publish directory：`public`",
 	"`www.whynotsnow.com`",
 	"`/plaza/t/:id`",
 	"`api.whynotsnow.com`",
-	"No `snow-index` environment variable contains secrets",
+	"`snow-index` environment variable 不包含 secrets",
 ]) {
 	if (!deploymentDoc.includes(phrase)) {
 		failures.push(`Deployment doc missing ${phrase}`);
@@ -270,11 +270,11 @@ for (const phrase of [
 }
 
 for (const phrase of [
-	"Sky/cyan/navy/light cloud palette",
-	"Blog remains the long-form reading system",
-	"Plaza is the public community/activity layer",
-	"Do not use the Blog reference image directly",
-	"Future additions should land in this order",
+	"Sky/cyan/navy/light cloud 色彩系统",
+	"Blog 仍是长文阅读系统",
+	"Plaza 是公开社区/活动层",
+	"不要直接把 Blog reference image 当作 Portal asset",
+	"未来新增模块建议按以下顺序落地",
 ]) {
 	if (!visualBoundaryDoc.includes(phrase)) {
 		failures.push(`Visual boundary doc missing ${phrase}`);

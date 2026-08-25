@@ -1,48 +1,48 @@
-# Deployment Approval Token Naming
+# 部署审批 Token 命名
 
-This note records the naming cleanup for `snow-index` and the follow-up changes that should be made in `snow-base` separately.
+本文记录 `snow-index` 的命名清理结果，以及需要在 `snow-base` 中另行完成的后续改动。
 
-## Current Decision
+## 当前决策
 
-Use `DEPLOY_APPROVAL_TOKEN` as the GitHub `production` Environment secret name in `snow-index`.
+在 `snow-index` 中使用 `DEPLOY_APPROVAL_TOKEN` 作为 GitHub `production` Environment secret 名称。
 
-Reasoning:
+理由：
 
-- The credential is consumed by the `snow-index` production workflow.
-- The permission purpose is deployment approval, not general `snow-base` access.
-- The issuing system is `snow-base`, but repository secret names should describe the local workflow contract.
-- The CI client already reads the generic environment variable `DEPLOY_APPROVAL_TOKEN`.
+- 该凭据由 `snow-index` 生产 workflow 消费。
+- 权限用途是 deployment approval，不是通用 `snow-base` access。
+- 签发系统是 `snow-base`，但仓库 secret 名称应描述本地 workflow contract。
+- CI client 已读取通用环境变量 `DEPLOY_APPROVAL_TOKEN`。
 
-The local CI client keeps `SNOW_BASE_DEPLOY_APPROVAL_TOKEN` as a compatibility fallback so existing projects do not break immediately.
+本地 CI client 保留 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN` 作为兼容 fallback，避免已有项目立即失效。
 
-## snow-index Changes
+## snow-index 改动
 
-- `.github/workflows/production-deploy.yml` maps `DEPLOY_APPROVAL_TOKEN` from `${{ secrets.DEPLOY_APPROVAL_TOKEN }}`.
-- `scripts/verify-deployment-approval.mjs` reports generic variable names first and treats old `SNOW_BASE_*` names as compatibility only.
-- `docs/developers/deployment-routing.md` documents `DEPLOY_APPROVAL_TOKEN` as the required production Environment secret.
+- `.github/workflows/production-deploy.yml` 从 `${{ secrets.DEPLOY_APPROVAL_TOKEN }}` 映射 `DEPLOY_APPROVAL_TOKEN`。
+- `scripts/verify-deployment-approval.mjs` 优先报告通用变量名，并把旧 `SNOW_BASE_*` 名称仅视作兼容路径。
+- `docs/developers/deployment-routing.md` 将 `DEPLOY_APPROVAL_TOKEN` 记录为必需的 production Environment secret。
 
-## Required GitHub Configuration
+## 必需 GitHub 配置
 
-In `whynotsnow/snow-index` -> `Settings` -> `Environments` -> `production`, configure:
+在 `whynotsnow/snow-index` -> `Settings` -> `Environments` -> `production` 中配置：
 
 ```text
 DEPLOY_APPROVAL_TOKEN
 ```
 
-The value should be a `snow-base` Admin service token with only:
+该值应是 `snow-base` Admin 创建的 service token，并且只具备：
 
 ```text
 deployments:request
 deployments:verify
 ```
 
-Do not add the token value to Git, docs, issues, sidecar records, logs, or chat.
+不要把 token 值写入 Git、docs、issues、sidecar records、logs 或 chat。
 
-## snow-base Follow-up, Do Not Edit Here
+## snow-base 后续项，不在本仓库修改
 
-These changes should be made in the `snow-base` project in a separate scoped task:
+以下改动应在 `snow-base` 项目中通过单独 scoped task 完成：
 
-1. In `scripts/verify-deployment-approval.mjs`, keep reading generic variables first:
+1. 在 `scripts/verify-deployment-approval.mjs` 中，继续优先读取通用变量：
    - `DEPLOY_APPROVAL_TOKEN`
    - `DEPLOY_APPROVAL_COMMIT_SHA`
    - `DEPLOY_APPROVAL_TARGET`
@@ -51,20 +51,20 @@ These changes should be made in the `snow-base` project in a separate scoped tas
    - `DEPLOY_APPROVAL_WAIT_SECONDS`
    - `DEPLOY_APPROVAL_POLL_SECONDS`
 
-2. Keep old `SNOW_BASE_*` variables as backwards-compatible fallbacks for one migration window.
+2. 保留旧 `SNOW_BASE_*` 变量作为一个迁移窗口内的 backwards-compatible fallback。
 
-3. Update error messages in the script to mention generic `DEPLOY_APPROVAL_*` names first, with old names described only as compatibility aliases.
+3. 更新脚本错误信息，优先提示通用 `DEPLOY_APPROVAL_*` 名称，旧名称只描述为兼容 alias。
 
-4. Update `docs/developers/deployment-approval-integration.md` so external projects configure `DEPLOY_APPROVAL_TOKEN`, not `SNOW_BASE_DEPLOY_APPROVAL_TOKEN`.
+4. 更新 `docs/developers/deployment-approval-integration.md`，让外部项目配置 `DEPLOY_APPROVAL_TOKEN`，而不是 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN`。
 
-5. Update `docs/developers/deployment.md` to distinguish:
-   - `snow-base` internal workflow compatibility, if still needed.
-   - external project integration using generic `DEPLOY_APPROVAL_TOKEN`.
+5. 更新 `docs/developers/deployment.md`，区分：
+   - `snow-base` internal workflow compatibility，如果仍然需要。
+   - 使用通用 `DEPLOY_APPROVAL_TOKEN` 的 external project integration。
 
-6. Update Admin token template UI:
+6. 更新 Admin token template UI：
    - `apps/admin/src/pages/tokens/tokenTemplates.ts`
    - `apps/admin/src/pages/tokens/components/CreatedTokenModal.tsx`
 
-   The copied GitHub CLI command should set `DEPLOY_APPROVAL_TOKEN` for external project repositories.
+   复制出的 GitHub CLI 命令应为外部项目仓库设置 `DEPLOY_APPROVAL_TOKEN`。
 
-7. If `SNOW_BASE_DEPLOY_APPROVAL_TOKEN` remains useful for the `snow-base` repository itself, label it as a legacy or internal alias rather than the recommended integration name.
+7. 如果 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN` 对 `snow-base` 仓库自身仍有用，把它标记为 legacy 或 internal alias，而不是推荐的集成名称。

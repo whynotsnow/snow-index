@@ -6,6 +6,8 @@ Read documents on demand according to the task.
 | --- | --- |
 | [Workflow](./workflow.md) | Agent execution, validation, tool routing, and handoff. |
 | [Project Map](./project-map.md) | Repository shape, ownership, architecture boundaries, and data flow. |
+| [Testing Strategy](./testing-strategy.md) | Impact-based validation selection. |
+| [Sound Cues](./sound-cues.md) | Local cue usage rules and forbidden cases. |
 | [Runtime Requirements](./runtime-requirements.md) | Public execution capability requirements. |
 | [Disclosure Policy](./disclosure-policy.md) | Public, local, raw, quarantine, and secret boundaries. |
 | [Runtime Playbook](./runtime-playbook.md) | Confirmed runtime and tooling failure patterns. |
