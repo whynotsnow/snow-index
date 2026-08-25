@@ -56,8 +56,10 @@ Do not claim a command passed unless it was actually run in this workspace and o
 
 ## Deployment Policy
 
-- Deployment actions must use a commit that has already been pushed to the remote repository and must run through GitHub Actions.
-- Do not deploy directly from a local working tree or an unpushed commit unless there is an explicit maintainer request or a documented exceptional situation.
+- Production deployment actions must use a commit that has already been pushed to the remote repository and must run through the GitHub Actions production deployment workflow.
+- The production deployment workflow must pass its approval gate before any Cloudflare Pages deployment step runs.
+- Do not deploy directly from a local working tree, local-only commit, ad hoc Wrangler command, or manually assembled artifact.
+- Exceptions require explicit maintainer approval before action and a written special-case note that records the reason, source commit, validation, residual risk, and why the GitHub Actions approval path cannot be used.
 
 ## Agent Workspace
 

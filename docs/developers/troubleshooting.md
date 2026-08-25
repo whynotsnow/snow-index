@@ -48,6 +48,8 @@ pnpm check
 
 生产 workflow 在 Cloudflare Pages deploy 前调用 `scripts/verify-deployment-approval.mjs`。
 
+审批失败时默认 fail closed。不要用本地 `wrangler pages deploy`、手工 artifacts 或未推送 commit 绕过审批流程；没有特殊情况或维护者书面说明时，修复配置后重新运行 GitHub Actions production workflow。
+
 常见失败类别：
 
 - GitHub `production` environment 缺少 `DEPLOY_APPROVAL_TOKEN`。
@@ -55,7 +57,7 @@ pnpm check
 - token scope 缺少 `deployments:request` 或 `deployments:verify`。
 - owner 拒绝或审批等待超时。
 
-不要把 token、raw response、private dashboard URL 或平台资源 ID 写入 issue、sidecar run 或文档。记录最小稳定错误签名和需要维护者执行的外部动作。
+不要把 token、raw response、private dashboard URL 或平台资源 ID 写入 issue、sidecar run 或文档。记录最小稳定错误签名、需要维护者执行的外部动作，以及 workflow 是否停在审批前还是审批后。
 
 ## Cloudflare Pages 路由或 headers 异常
 

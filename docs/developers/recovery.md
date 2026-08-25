@@ -1,11 +1,12 @@
 # 恢复指南
 
-本文档记录 `snow-index` 的公开恢复策略。生产恢复应优先使用已推送到 `origin` 的提交和托管平台已有部署，不从本地 dirty working tree 拼装发布。
+本文档记录 `snow-index` 的公开恢复策略。生产恢复必须优先使用已推送到 `origin` 的提交、GitHub Actions production workflow 和托管平台已有部署，不从本地 dirty working tree 拼装发布。
 
 ## 恢复原则
 
 - 保持 `/` 可用是第一目标。
 - 优先使用 Cloudflare Pages previous deployment rollback。
+- 需要重新发布时，使用 GitHub Actions production workflow，并等待部署审批门禁通过。
 - 避免把 DNS 改动作为第一恢复动作；自定义域 detach/repoint 可能引入额外传播时间。
 - 不把 Cloudflare tokens、Access JWTs、raw logs、private resource IDs 或 maintainer 个人信息写入 tracked 文件。
 
@@ -42,7 +43,7 @@
 
 ## 部署审批或 workflow 回滚
 
-生产 workflow 出现审批配置问题时，默认 fail closed。不要绕过审批门禁，除非维护者明确授权 emergency local deploy。
+生产 workflow 出现审批配置问题时，默认 fail closed。不要绕过审批门禁；没有特殊情况或维护者书面说明时，恢复也必须通过 GitHub Actions production workflow 和审批流程。
 
 常规恢复：
 
@@ -52,15 +53,15 @@
 
 异常恢复：
 
-1. 维护者明确授权 emergency local deploy。
-2. 确认目标 commit 已推送到 `origin`，除非维护者明确接受未推送风险。
-3. 运行 `pnpm check`。
-4. 执行文档中的 emergency deploy 命令。
-5. 记录 source commit、原因、验证和残余风险，不记录 secrets 或 raw logs。
+1. 维护者在执行前明确批准异常路径，并说明为什么不能使用 GitHub Actions 审批路径。
+2. 确认目标 commit 已推送到 `origin`；如果维护者要求处理未推送状态，必须单独记录该风险。
+3. 运行 `pnpm check`，并根据影响范围执行必要的路由或页面验证。
+4. 优先重新运行 production workflow；只有维护者特别授权时才允许绕过 workflow。
+5. 记录 source commit、特殊原因、验证、残余风险和审批上下文，不记录 secrets 或 raw logs。
 
 ## 恢复完成标准
 
 - 受影响公开路径恢复到预期行为。
 - `pnpm check` 或更高层验证通过。
-- 生产恢复基于已推送提交或有明确例外记录。
+- 生产恢复基于已推送提交、GitHub Actions production workflow 和审批门禁；任何偏离都有明确例外记录。
 - sidecar run 记录包含 changed paths、commands、results、skipped validation 和 residual risk。

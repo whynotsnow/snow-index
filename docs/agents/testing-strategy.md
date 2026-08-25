@@ -34,7 +34,7 @@ This is the validation-selection contract for agents working in `snow-index`. Va
 | Public data fixtures | `pnpm check` | Local preview when fixture drives rendered behavior |
 | `public/site-config.js` | `pnpm check` | Local preview for copy, navigation, SEO, or public link changes |
 | Pages routing files or functions | `pnpm check`; `node --check functions/**/*.js` when edited | Preview/production HTTP checks for status, headers, redirects, and `url_effective` |
-| Deployment workflow or approval script | `node --check scripts/verify-deployment-approval.mjs`; `pnpm check` | GitHub Actions run from pushed commit for release confidence |
+| Deployment workflow, approval script, or deployment policy | `node --check scripts/verify-deployment-approval.mjs` when scripts changed; `pnpm check` | GitHub Actions run from pushed commit for release confidence |
 | Cue config or cue script | `node scripts/codex-cue.mjs help`; `node scripts/codex-cue.mjs show done` | Do not play audio unless the task explicitly requires preview |
 | Dependencies or lockfile | `pnpm install --frozen-lockfile`; `pnpm check` | Local preview or release workflow when runtime behavior may change |
 
@@ -45,6 +45,7 @@ Run broader validation when:
 - public routing, security headers, CSP, canonical URLs, or Pages Functions change;
 - Plaza topic parsing, public submission, Turnstile widget wiring, attachment upload, or API fallback behavior changes;
 - deployment approval, GitHub Actions, Wrangler, package manager, or lockfile behavior changes;
+- deployment policy changes weaken or change the required GitHub Actions approval path;
 - a selected check reveals an unexpected cross-surface dependency;
 - the user asks for release-level confidence.
 

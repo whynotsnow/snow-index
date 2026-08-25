@@ -46,10 +46,12 @@ Do not copy local/raw/quarantine contents into tracked docs, sidecar runs, or ha
 
 ## Deployment execution
 
-- Treat GitHub Actions as the default and required production deployment path.
+- Treat GitHub Actions as the required production deployment path.
 - Before any deployment action, confirm the source is a commit already pushed to the remote repository.
-- Do not deploy from local working-tree state, local-only commits, or ad hoc Wrangler commands unless the maintainer explicitly asks for it or the situation is documented as exceptional.
-- When an exception is used, record the reason, source commit, validation performed, and residual risk without storing secrets or raw private logs.
+- Production deployment must run through the repository production deployment workflow and pass its approval gate before Cloudflare Pages deploy starts.
+- Do not deploy from local working-tree state, local-only commits, ad hoc Wrangler commands, or manually assembled artifacts.
+- Exceptions require explicit maintainer approval before action and a written special-case note explaining why the GitHub Actions approval path cannot be used.
+- When an exception is approved, record the reason, source commit, validation performed, residual risk, and approval context without storing secrets or raw private logs.
 
 ## Validation truthfulness
 

@@ -16,9 +16,9 @@
 
 ## 生产部署
 
-遵循与 `snow-base` 一致的部署边界：生产部署必须通过 GitHub Actions 执行，来源必须是已经推送到远端仓库的 commit。
+遵循与 `snow-base` 一致的部署边界：生产部署必须通过 GitHub Actions 执行，来源必须是已经推送到远端仓库的 commit，并且必须通过部署审批门禁后才能发布到 Cloudflare Pages。
 
-不要部署本地 working-tree 状态、未推送 commit 或手工拼装的 artifacts。例外情况需要维护者明确要求，或记录为异常场景，并说明 source commit、原因、验证和残余风险。
+不要部署本地 working-tree 状态、未推送 commit、手工拼装的 artifacts，也不要用本地 `wrangler pages deploy` 作为常规发布路径。没有特殊情况或维护者书面说明时，必须遵守 GitHub Actions + 审批门禁路径。
 
 Workflow：
 
@@ -33,6 +33,7 @@ Workflow：
 - 通过 Corepack 使用 Node.js 22 和 pnpm。
 - 运行 `pnpm install --frozen-lockfile`。
 - 运行 `pnpm check`。
+- 在部署前运行 `scripts/verify-deployment-approval.mjs` 完成审批校验。
 - 使用 Wrangler 将 `public/` 和 Pages Functions Direct Upload 到 Cloudflare Pages project `snow-index`。
 
 必需 GitHub Environment secrets：
@@ -54,15 +55,9 @@ Cloudflare API token 应使用能部署 `snow-index` Pages project 并读取 acc
 - 在 `snow-base` Admin deployment projects 中注册 `snow-index`，并允许 target `pages`。
 - 将 `DEPLOY_APPROVAL_TOKEN` 添加到 GitHub `production` Environment secrets。
 
-Emergency local deploy 仅在维护者明确批准时允许。除非维护者明确接受风险，否则仍应以已推送到远端仓库的 commit 为目标：
+异常路径不是常规发布手段。只有维护者在执行前明确批准，并写明为什么不能使用 GitHub Actions 审批路径时，才可以考虑异常部署。即使进入异常处理，也应优先把修复提交推送到远端并重新运行 production workflow。
 
-```bash
-pnpm install --frozen-lockfile
-pnpm check
-pnpm exec wrangler pages deploy public --project-name snow-index --branch main
-```
-
-任何 emergency local deploy 完成后，都要记录原因、source commit 和 sanitized validation result。
+如果维护者特别授权绕过 GitHub Actions，执行记录必须写清楚特殊原因、source commit、验证结果、残余风险和审批上下文，并且不得记录 secrets、raw logs 或 private resource IDs。
 
 ## 域名
 
