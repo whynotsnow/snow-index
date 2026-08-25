@@ -19,6 +19,7 @@
 		<meta name="twitter:description" content="WhynotSnow Plaza 的公开动态、讨论、问答、反馈和留言入口。" />
 		<meta name="twitter:image" content="https://whynotsnow.com/assets/portal-map.png" />
 		<link rel="stylesheet" href="/styles.css" />
+		<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 		<script type="module" src="/plaza.js"></script>
 	</head>
 	<body data-plaza-page="list">
@@ -54,13 +55,38 @@
 				<button type="button" data-plaza-type="guestbook">留言</button>
 			</section>
 
-			<section class="compose-shell" aria-label="发帖入口">
+			<form class="compose-shell compose-form" data-topic-form aria-label="发帖入口">
 				<div>
 					<strong>公开提交</strong>
-					<p>发主题、回复和附件上传会在 Turnstile sitekey 与后端验证就绪后开放；提交成功后进入审核队列。</p>
+					<p>发主题会通过 Turnstile `plaza_topic` 验证；提交成功后进入审核队列，不会立即显示。</p>
 				</div>
-				<button type="button" disabled>等待开放</button>
-			</section>
+				<div class="compose-fields">
+					<label>
+						<span>类型</span>
+						<select name="type" required>
+							<option value="discussion">讨论</option>
+							<option value="question">问答</option>
+							<option value="feedback">反馈</option>
+							<option value="guestbook">留言</option>
+						</select>
+					</label>
+					<label>
+						<span>标题</span>
+						<input name="title" type="text" maxlength="120" required autocomplete="off" />
+					</label>
+					<label>
+						<span>正文</span>
+						<textarea name="body" rows="5" maxlength="4000" required></textarea>
+					</label>
+					<label>
+						<span>昵称</span>
+						<input name="authorName" type="text" maxlength="40" autocomplete="name" placeholder="可选" />
+					</label>
+					<div class="turnstile-slot" data-turnstile-widget></div>
+					<p class="compose-status" data-compose-status role="status"></p>
+				</div>
+				<button type="submit">提交审核</button>
+			</form>
 
 			<p class="summary-source" data-plaza-source>正在读取 Plaza 公开主题...</p>
 

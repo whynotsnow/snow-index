@@ -3,6 +3,7 @@ import { siteConfig } from "./site-config.js";
 const API_BASE = "https://api.whynotsnow.com";
 const FIXTURE_ENDPOINT = "/data/plaza.fixture.json";
 const FETCH_TIMEOUT_MS = 3200;
+const TURNSTILE_READY_TIMEOUT_MS = 10000;
 
 const typeLabels = {
 	all: "全部",
@@ -15,6 +16,20 @@ const typeLabels = {
 };
 
 const validTypes = new Set(Object.keys(typeLabels));
+
+const submitErrorCopy = {
+	missing_turnstile: "请先完成人机验证。",
+	invalid_turnstile: "验证失败，请重试。",
+	turnstile_unavailable: "验证服务暂时不可用，请稍后。",
+	turnstile_not_configured: "Plaza 提交暂未开放。",
+	rate_limited: "提交过于频繁，请稍后再试。",
+	invalid_type: "请选择有效类型。",
+	invalid_title: "标题长度不符合要求。",
+	invalid_body: "正文长度不符合要求。",
+	invalid_author_name: "昵称长度不符合要求。",
+	topic_not_found: "主题不存在或不可见。",
+	topic_locked: "该主题已锁定，不能回复。",
+};
 
 function absoluteUrl(path) {
 	return new URL(path, siteConfig.seo.baseUrl).toString();
@@ -104,6 +119,37 @@ async function fetchJson(url) {
 			throw new Error(`Request failed with ${response.status}`);
 		}
 		return response.json();
+	} finally {
+		window.clearTimeout(timeout);
+	}
+}
+
+async function postJson(url, body) {
+	const controller = new AbortController();
+	const timeout = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+	try {
+		const response = await fetch(url, {
+			method: "POST",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(body),
+			signal: controller.signal,
+			mode: "cors",
+		});
+		let payload = null;
+		try {
+			payload = await response.json();
+		} catch {
+			// Some failures may not have a JSON body.
+		}
+		if (!response.ok) {
+			const error = new Error(`Request failed with ${response.status}`);
+			error.payload = payload;
+			throw error;
+		}
+		return payload;
 	} finally {
 		window.clearTimeout(timeout);
 	}
@@ -401,10 +447,189 @@ function createPill(text) {
 	return pill;
 }
 
+function setComposeStatus(form, message, tone = "neutral") {
+	const status = form.querySelector("[data-compose-status]");
+	if (status) {
+		status.textContent = message;
+		status.dataset.tone = tone;
+	}
+}
+
+function waitForTurnstile() {
+	return new Promise((resolve, reject) => {
+		const startedAt = Date.now();
+		const check = () => {
+			if (window.turnstile?.render) {
+				resolve(window.turnstile);
+				return;
+			}
+			if (Date.now() - startedAt > TURNSTILE_READY_TIMEOUT_MS) {
+				reject(new Error("Turnstile script did not load"));
+				return;
+			}
+			window.setTimeout(check, 120);
+		};
+		check();
+	});
+}
+
+async function createTurnstileController(form, action) {
+	const sitekey = siteConfig.plaza?.turnstileSiteKey;
+	const slot = form.querySelector("[data-turnstile-widget]");
+	if (!sitekey || !slot) {
+		throw new Error("Turnstile sitekey is not configured");
+	}
+
+	const state = {
+		token: "",
+		widgetId: null,
+	};
+	const turnstile = await waitForTurnstile();
+	state.widgetId = turnstile.render(slot, {
+		sitekey,
+		action,
+		callback(token) {
+			state.token = token;
+			setComposeStatus(form, "验证已完成，可以提交。", "success");
+		},
+		"expired-callback"() {
+			state.token = "";
+			setComposeStatus(form, "验证已过期，请重新完成验证。", "error");
+		},
+		"error-callback"() {
+			state.token = "";
+			setComposeStatus(form, "验证加载失败，请刷新后重试。", "error");
+		},
+	});
+
+	return {
+		getToken() {
+			return state.token;
+		},
+		reset() {
+			state.token = "";
+			if (state.widgetId !== null) {
+				turnstile.reset(state.widgetId);
+			}
+		},
+	};
+}
+
+function submitErrorMessage(error) {
+	const code = error?.payload?.error?.code ?? error?.payload?.code;
+	return submitErrorCopy[code] ?? "提交失败，请稍后重试。";
+}
+
+function formValue(form, name) {
+	return String(new FormData(form).get(name) ?? "").trim();
+}
+
+async function wireTopicForm() {
+	const form = document.querySelector("[data-topic-form]");
+	if (!form) {
+		return;
+	}
+
+	setComposeStatus(form, "正在加载人机验证...", "neutral");
+	const turnstileReady = createTurnstileController(form, "plaza_topic").catch(() => {
+		setComposeStatus(form, "Turnstile 未加载，公开提交暂不可用。", "error");
+		return null;
+	});
+
+	form.addEventListener("submit", async (event) => {
+		event.preventDefault();
+		const submitButton = form.querySelector("button[type='submit']");
+		let turnstile;
+		turnstile = await turnstileReady;
+		if (!turnstile) {
+			return;
+		}
+		const token = turnstile.getToken();
+		if (!token) {
+			setComposeStatus(form, "请先完成人机验证。", "error");
+			return;
+		}
+
+		submitButton.disabled = true;
+		setComposeStatus(form, "正在提交审核...", "neutral");
+		try {
+			await postJson(`${API_BASE}/api/v1/plaza/topics`, {
+				type: formValue(form, "type"),
+				title: formValue(form, "title"),
+				body: formValue(form, "body"),
+				authorName: formValue(form, "authorName") || undefined,
+				attachmentIds: [],
+				turnstileToken: token,
+			});
+			form.reset();
+			turnstile.reset();
+			setComposeStatus(form, "已提交，等待审核。", "success");
+		} catch (error) {
+			turnstile.reset();
+			setComposeStatus(form, submitErrorMessage(error), "error");
+		} finally {
+			submitButton.disabled = false;
+		}
+	});
+}
+
+async function wireReplyForm() {
+	const form = document.querySelector("[data-reply-form]");
+	if (!form) {
+		return;
+	}
+	const id = topicIdFromPath();
+	if (!id) {
+		setComposeStatus(form, "缺少主题 ID，无法提交回复。", "error");
+		return;
+	}
+
+	setComposeStatus(form, "正在加载人机验证...", "neutral");
+	const turnstileReady = createTurnstileController(form, "plaza_reply").catch(() => {
+		setComposeStatus(form, "Turnstile 未加载，公开回复暂不可用。", "error");
+		return null;
+	});
+
+	form.addEventListener("submit", async (event) => {
+		event.preventDefault();
+		const submitButton = form.querySelector("button[type='submit']");
+		let turnstile;
+		turnstile = await turnstileReady;
+		if (!turnstile) {
+			return;
+		}
+		const token = turnstile.getToken();
+		if (!token) {
+			setComposeStatus(form, "请先完成人机验证。", "error");
+			return;
+		}
+
+		submitButton.disabled = true;
+		setComposeStatus(form, "正在提交审核...", "neutral");
+		try {
+			await postJson(`${API_BASE}/api/v1/plaza/topics/${encodeURIComponent(id)}/replies`, {
+				body: formValue(form, "body"),
+				authorName: formValue(form, "authorName") || undefined,
+				attachmentIds: [],
+				turnstileToken: token,
+			});
+			form.reset();
+			turnstile.reset();
+			setComposeStatus(form, "已提交，等待审核。", "success");
+		} catch (error) {
+			turnstile.reset();
+			setComposeStatus(form, submitErrorMessage(error), "error");
+		} finally {
+			submitButton.disabled = false;
+		}
+	});
+}
+
 async function initList() {
 	applyPageMeta(siteConfig.seo.pages.plaza);
 	const selectedType = getSelectedType();
 	wireFilters(selectedType);
+	wireTopicForm();
 	const feed = document.querySelector("[data-plaza-feed]");
 	if (feed) {
 		feed.replaceChildren(createStateCard("正在读取 Plaza 动态", "优先连接公开 API，失败时会显示本地降级数据。"));
@@ -415,6 +640,7 @@ async function initList() {
 
 async function initDetail() {
 	applyPageMeta(siteConfig.seo.pages.plazaTopic, absoluteUrl(window.location.pathname));
+	wireReplyForm();
 	const id = topicIdFromPath();
 	const root = document.querySelector("[data-topic-detail]");
 	const sourceText = document.querySelector("[data-plaza-source]");

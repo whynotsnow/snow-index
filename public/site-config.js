@@ -50,6 +50,9 @@ export const siteConfig = {
 			{ id: "blog", label: "阅读 Blog", href: "https://blog.whynotsnow.com/", variant: "secondary" },
 		],
 	},
+	plaza: {
+		turnstileSiteKey: "0x4AAAAAAEX1SgsPU7WE52tE",
+	},
 	status: {
 		label: "Portal MVP",
 		copy: "Blog 与 Plaza 摘要已接入公开契约；站点状态聚合后续接入。",

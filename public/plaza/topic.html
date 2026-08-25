@@ -19,6 +19,7 @@
 		<meta name="twitter:description" content="WhynotSnow Plaza 公开主题详情。" data-twitter-description />
 		<meta name="twitter:image" content="https://whynotsnow.com/assets/portal-map.png" />
 		<link rel="stylesheet" href="/styles.css" />
+		<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 		<script type="module" src="/plaza.js"></script>
 	</head>
 	<body data-plaza-page="topic">
@@ -56,13 +57,25 @@
 				<div data-topic-replies class="reply-list"></div>
 			</section>
 
-			<section class="compose-shell" aria-label="回复入口">
+			<form class="compose-shell compose-form" data-reply-form aria-label="回复入口">
 				<div>
 					<strong>回复提交</strong>
-					<p>公开回复会在 Turnstile `plaza_reply` 接入后开放；提交成功后等待审核，不会立即显示。</p>
+					<p>公开回复会通过 Turnstile `plaza_reply` 验证；提交成功后等待审核，不会立即显示。</p>
 				</div>
-				<button type="button" disabled>等待开放</button>
-			</section>
+				<div class="compose-fields">
+					<label>
+						<span>回复</span>
+						<textarea name="body" rows="5" maxlength="3000" required></textarea>
+					</label>
+					<label>
+						<span>昵称</span>
+						<input name="authorName" type="text" maxlength="40" autocomplete="name" placeholder="可选" />
+					</label>
+					<div class="turnstile-slot" data-turnstile-widget></div>
+					<p class="compose-status" data-compose-status role="status"></p>
+				</div>
+				<button type="submit">提交审核</button>
+			</form>
 		</main>
 	</body>
 </html>
