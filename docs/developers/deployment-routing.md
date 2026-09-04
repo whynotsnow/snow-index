@@ -12,7 +12,7 @@
 - Runtime secrets：`snow-index` 不持有。
 - Public API owner：`snow-base`，通过 `https://api.whynotsnow.com` 暴露。
 
-当前输出将静态资源保留在 `public/`，并为 `/plaza/t/*` 使用一个 Pages Function，使 topic URL 在服务静态 topic shell 时仍保留原始路径。
+当前输出将静态资源保留在 `public/`，并为 `/plaza/t/*` 使用一个 Pages Function，使 topic URL 在服务静态 topic shell 时仍保留原始路径。Pages canonical artifact 的 payload 根固定包含 `public/` 和 `functions/` 两棵目录树；归档只保存 regular files，解包后仍从 `public` 执行 Wrangler Pages deploy。
 
 ## 生产部署
 
@@ -26,15 +26,24 @@ Workflow：
 .github/workflows/production-deploy.yml
 ```
 
-该 workflow：
+该 workflow 同时承载 candidate 和 selected-artifact 两条路径：
+
+- `main` push 触发 candidate：运行 `pnpm check`，冻结唯一的 `pages-dist.tar.gz`，上传并下载 round-trip，再计算并登记 canonical digest。
+- Admin 选定 candidate 后由 `snow-base` control plane dispatch `mode=selected-artifact`，传递 immutable deployment artifact id/digest、GitHub artifact id/run/name 和 exact commit。
+- selected-artifact 先按 GitHub artifact id 和 source run id 下载归档，复验 `sha256:<64 位小写十六进制>`，解包到临时 Pages payload，再请求和消费 owner approval。
+- owner approval 消费成功后，只从已复验的临时 payload 执行 Wrangler，不重新 build、不使用工作区 `public/`，也不按 mutable artifact name 取得授权。
+- snow-base control plane 在 Admin selected dispatch 前负责 GitHub artifact 获取、canonical 校验和 durable R2 promotion；snow-index 不请求 `deployments:artifact-promote` 或 `deployments:run-update`。
+
+该 workflow 的通用步骤包括：
 
 - 需要名为 `production` 的 GitHub Environment。
-- 校验 checked-out commit 与 `origin/main` 一致。
+- candidate 路径使用 push event 的 exact commit；selected-artifact 路径校验输入 commit 与 checked-out commit 一致。
 - 通过 Corepack 使用 Node.js 22 和 pnpm。
 - 运行 `pnpm install --frozen-lockfile`。
 - 运行 `pnpm check`。
-- 在部署前运行 `scripts/verify-deployment-approval.mjs` 完成审批校验。
-- 使用 Wrangler 将 `public/` 和 Pages Functions Direct Upload 到 Cloudflare Pages project `snow-index`。
+- candidate 路径使用 `scripts/deployment-artifact.mjs` 生成和 round-trip 校验 archive，并使用 `scripts/register-candidate-artifact.mjs` 登记 metadata。
+- selected-artifact 路径使用 `scripts/deployment-artifact.mjs` 下载后复验 canonical digest，再由 `scripts/verify-deployment-approval.mjs` 分阶段请求/消费审批。
+- 最终使用 Wrangler 将解包 payload 中的 `public/` 和同级 Pages Functions Direct Upload 到 Cloudflare Pages project `snow-index`。
 
 必需 GitHub Environment secrets：
 
@@ -45,6 +54,19 @@ Workflow：
 Cloudflare API token 应使用能部署 `snow-index` Pages project 并读取 account context 的最小权限。不要把 token、account ID、dashboard URLs、cookies 或 raw deployment logs 写入 sidecar records。
 
 `DEPLOY_APPROVAL_TOKEN` 是在 `snow-base` Admin 中创建的 service token，只应具备 `deployments:request` 和 `deployments:verify` scopes。虽然签发系统是 `snow-base`，但该 token 是 `snow-index` 的 deployment-approval client credential，因此本仓库使用通用 GitHub secret 名称。
+
+candidate registration 和 selected dispatch 的 artifact envelope 固定为：
+
+```text
+artifact type: pages-dist
+canonical archive: pages-dist.tar.gz
+GitHub artifact name: snow-index-pages-candidate
+payload roots: public/, functions/
+digest: sha256:<64 lowercase hex>
+candidate retention: 7 days
+```
+
+candidate 注册 metadata 必须同时保留 `githubArtifactId`、`githubArtifactRunId`、`githubArtifactName` 和 `canonicalArchiveName`。selected workflow 必须使用同一 `artifact_id`/digest/commit；任何下载失败、过期、归档缺失、身份不一致或 digest mismatch 都在 approval consume 前 fail closed。审批 token 仍只需要 `deployments:request`、`deployments:verify`。
 
 一次性 Cloudflare 配置：
 

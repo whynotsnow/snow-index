@@ -1,35 +1,95 @@
 name: Production Deploy
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Candidate validation or selected-artifact deployment"
+        required: true
+        default: verify-only
+        type: choice
+        options:
+          - verify-only
+          - candidate
+          - selected-artifact
+      project_slug:
+        description: "Deployment project slug"
+        required: true
+        default: snow-index
+        type: string
+      target:
+        description: "Deployment target"
+        required: true
+        default: pages
+        type: string
+      commit_sha:
+        description: "Exact candidate commit SHA"
+        required: false
+        type: string
+      artifact_id:
+        description: "snow-base deployment artifact id"
+        required: false
+        type: string
+      artifact_digest:
+        description: "Canonical Pages tar digest"
+        required: false
+        type: string
+      artifact_run_id:
+        description: "Source candidate GitHub Actions run id"
+        required: false
+        type: string
+      artifact_github_id:
+        description: "Source candidate GitHub artifact id"
+        required: false
+        type: string
+      artifact_name:
+        description: "Source candidate GitHub artifact name"
+        required: false
+        type: string
+      request_id:
+        description: "snow-base deployment request id"
+        required: false
+        type: string
+      change_summary:
+        description: "Approved deployment change summary"
+        required: false
+        type: string
+      validation_summary:
+        description: "Candidate validation summary"
+        required: false
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: production-deploy
+  group: production-deploy-${{ github.workflow }}
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy production
+  candidate:
+    name: Build Pages candidate
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' &&
+      (inputs.mode == 'candidate' || inputs.mode == 'verify-only'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production
+    permissions:
+      contents: read
+      actions: write
     env:
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      DEPLOY_APPROVAL_TOKEN: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
-      - name: Verify origin main commit
-        run: |
-          git fetch origin main
-          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
-          echo "Deploying commit $(git rev-parse HEAD)"
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -46,19 +106,167 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check static portal
+      - name: Validate source
         run: pnpm check
 
-      - name: Verify deployment approval
+      - name: Freeze canonical Pages artifact
+        id: freeze
+        run: |
+          digest="$(node scripts/deployment-artifact.mjs pack --root "$GITHUB_WORKSPACE" --archive "$RUNNER_TEMP/pages-dist.tar.gz")"
+          echo "artifact_digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Upload candidate artifact
+        id: upload
+        if: github.event_name == 'push' || inputs.mode == 'candidate'
+        uses: actions/upload-artifact@v4
+        with:
+          name: snow-index-pages-candidate
+          path: ${{ runner.temp }}/pages-dist.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: Download candidate artifact for round-trip check
+        if: github.event_name == 'push' || inputs.mode == 'candidate'
+        uses: actions/download-artifact@v5
+        with:
+          artifact-ids: ${{ steps.upload.outputs.artifact-id }}
+          path: ${{ runner.temp }}/pages-roundtrip
+
+      - name: Recheck canonical digest after artifact round-trip
+        id: roundtrip
+        if: github.event_name == 'push' || inputs.mode == 'candidate'
+        run: |
+          digest="$(node scripts/deployment-artifact.mjs verify --archive "$RUNNER_TEMP/pages-roundtrip/pages-dist.tar.gz" --expected-digest "${{ steps.freeze.outputs.artifact_digest }}")"
+          echo "artifact_digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Register candidate artifact
+        if: github.event_name == 'push' || inputs.mode == 'candidate'
         env:
-          DEPLOY_APPROVAL_TOKEN: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
-          DEPLOY_APPROVAL_PROJECT: snow-index
-          DEPLOY_APPROVAL_TARGET: pages
           DEPLOY_APPROVAL_COMMIT_SHA: ${{ github.sha }}
+          DEPLOY_APPROVAL_ARTIFACT_DIGEST: ${{ steps.roundtrip.outputs.artifact_digest }}
+          DEPLOY_APPROVAL_ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          DEPLOY_APPROVAL_ARTIFACT_NAME: snow-index-pages-candidate
+          DEPLOY_APPROVAL_ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          DEPLOY_APPROVAL_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DEPLOY_APPROVAL_RETENTION_DAYS: "7"
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: node scripts/register-candidate-artifact.mjs
+
+  selected-artifact:
+    name: Deploy selected Pages artifact
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'selected-artifact'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    permissions:
+      contents: read
+      actions: read
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      DEPLOY_APPROVAL_TOKEN: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+    steps:
+      - name: Checkout selected commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.commit_sha }}
+          fetch-depth: 0
+
+      - name: Validate selected-artifact dispatch contract
+        env:
+          SELECTED_PROJECT: ${{ inputs.project_slug }}
+          SELECTED_TARGET: ${{ inputs.target }}
+          SELECTED_COMMIT: ${{ inputs.commit_sha }}
+          SELECTED_ARTIFACT_ID: ${{ inputs.artifact_id }}
+          SELECTED_DIGEST: ${{ inputs.artifact_digest }}
+          SELECTED_RUN_ID: ${{ inputs.artifact_run_id }}
+          SELECTED_GITHUB_ID: ${{ inputs.artifact_github_id }}
+          SELECTED_NAME: ${{ inputs.artifact_name }}
+        run: |
+          test "$SELECTED_PROJECT" = snow-index
+          test "$SELECTED_TARGET" = pages
+          test "$SELECTED_COMMIT" = "$(git rev-parse HEAD)"
+          test "$SELECTED_COMMIT" = "$(git rev-parse --verify "$SELECTED_COMMIT^{commit}")"
+          test "$SELECTED_ARTIFACT_ID" != ""
+          echo "$SELECTED_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          test "$SELECTED_RUN_ID" -gt 0
+          test "$SELECTED_GITHUB_ID" -gt 0
+          test "$SELECTED_NAME" = snow-index-pages-candidate
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
+      - name: Setup pnpm through Corepack
+        run: |
+          corepack enable
+          corepack install
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download selected candidate artifact
+        uses: actions/download-artifact@v5
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.artifact_run_id }}
+          artifact-ids: ${{ inputs.artifact_github_id }}
+          path: ${{ runner.temp }}/pages-selected
+
+      - name: Verify and extract selected canonical payload
+        run: |
+          node scripts/deployment-artifact.mjs verify \
+            --archive "$RUNNER_TEMP/pages-selected/pages-dist.tar.gz" \
+            --expected-digest "${{ inputs.artifact_digest }}" \
+            --extract-to "$RUNNER_TEMP/pages-payload"
+
+      - name: Request and wait for owner approval
+        id: approval
+        env:
+          DEPLOY_APPROVAL_PROJECT: ${{ inputs.project_slug }}
+          DEPLOY_APPROVAL_TARGET: ${{ inputs.target }}
+          DEPLOY_APPROVAL_COMMIT_SHA: ${{ inputs.commit_sha }}
+          DEPLOY_APPROVAL_ARTIFACT_TYPE: pages-dist
+          DEPLOY_APPROVAL_ARTIFACT_ID: ${{ inputs.artifact_id }}
+          DEPLOY_APPROVAL_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
+          DEPLOY_APPROVAL_ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id }}
+          DEPLOY_APPROVAL_ARTIFACT_NAME: ${{ inputs.artifact_name }}
+          DEPLOY_APPROVAL_REQUEST_ID: ${{ inputs.request_id }}
+          DEPLOY_APPROVAL_CHANGE_SUMMARY: ${{ inputs.change_summary }}
+          DEPLOY_APPROVAL_VALIDATION_SUMMARY: ${{ inputs.validation_summary }}
           DEPLOY_APPROVAL_REQUEST_SOURCE: github-actions
           DEPLOY_APPROVAL_REQUEST_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DEPLOY_APPROVAL_PHASE: request
           DEPLOY_APPROVAL_WAIT_SECONDS: "900"
         run: node scripts/verify-deployment-approval.mjs
 
-      - name: Deploy Cloudflare Pages
-        run: pnpm exec wrangler pages deploy public --project-name snow-index --branch main --commit-hash "${GITHUB_SHA}" --commit-message "${GITHUB_SHA}" --commit-dirty=false
+      - name: Consume exact owner approval
+        env:
+          DEPLOY_APPROVAL_PROJECT: ${{ inputs.project_slug }}
+          DEPLOY_APPROVAL_TARGET: ${{ inputs.target }}
+          DEPLOY_APPROVAL_COMMIT_SHA: ${{ inputs.commit_sha }}
+          DEPLOY_APPROVAL_ARTIFACT_TYPE: pages-dist
+          DEPLOY_APPROVAL_ARTIFACT_ID: ${{ inputs.artifact_id }}
+          DEPLOY_APPROVAL_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
+          DEPLOY_APPROVAL_ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id }}
+          DEPLOY_APPROVAL_ARTIFACT_NAME: ${{ inputs.artifact_name }}
+          DEPLOY_APPROVAL_ID: ${{ steps.approval.outputs.approval_id }}
+          DEPLOY_APPROVAL_REQUEST_SOURCE: github-actions
+          DEPLOY_APPROVAL_REQUEST_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DEPLOY_APPROVAL_PHASE: consume
+        run: node scripts/verify-deployment-approval.mjs
+
+      - name: Deploy verified canonical payload
+        working-directory: ${{ runner.temp }}/pages-payload
+        run: |
+          "$GITHUB_WORKSPACE/node_modules/.bin/wrangler" pages deploy public \
+            --project-name snow-index \
+            --branch main \
+            --commit-hash "${{ inputs.commit_sha }}" \
+            --commit-message "${{ inputs.commit_sha }}" \
+            --commit-dirty=false

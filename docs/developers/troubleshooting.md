@@ -46,7 +46,7 @@ pnpm check
 
 ## 生产部署审批失败
 
-生产 workflow 在 Cloudflare Pages deploy 前调用 `scripts/verify-deployment-approval.mjs`。
+生产 workflow 先通过 candidate 路径冻结并登记 `pages-dist`，selected-artifact 路径再下载同一 GitHub artifact、复验 canonical digest，并由 `scripts/verify-deployment-approval.mjs` 分阶段请求/消费审批。
 
 审批失败时默认 fail closed。不要用本地 `wrangler pages deploy`、手工 artifacts 或未推送 commit 绕过审批流程；没有特殊情况或维护者书面说明时，修复配置后重新运行 GitHub Actions production workflow。
 
@@ -56,6 +56,11 @@ pnpm check
 - `snow-base` Admin 未注册 `snow-index/pages`。
 - token scope 缺少 `deployments:request` 或 `deployments:verify`。
 - owner 拒绝或审批等待超时。
+- `pages-dist.tar.gz` 缺失、不是唯一归档、candidate 已过期，或 GitHub artifact id/run/name 与登记 metadata 不一致。
+- 下载后的 tar 路径、mode、owner、mtime、entry type 或 digest 不符合 canonical contract。
+- selected-artifact workflow 使用了错误 commit，或尝试从工作区 `public/` 重新部署。
+
+恢复规则：artifact 过期或已消费时重新生成 candidate，不复用旧 approval；digest mismatch、artifact identity mismatch 和中心 promotion 失败时停止 workflow，交由 snow-base control plane 修复或重新 dispatch。不要向 snow-index token 增加 `deployments:artifact-promote` / `deployments:run-update` 来绕过中心化 promotion。
 
 不要把 token、raw response、private dashboard URL 或平台资源 ID 写入 issue、sidecar run 或文档。记录最小稳定错误签名、需要维护者执行的外部动作，以及 workflow 是否停在审批前还是审批后。
 
