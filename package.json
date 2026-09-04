@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
     "check": "node scripts/check-static.mjs",
+    "check:api-compatibility": "node scripts/check-api-compatibility.mjs",
     "test:deployment-contract": "node --test scripts/deployment-artifact.test.mjs scripts/production-deploy-contract.test.mjs",
     "plan": "node scripts/dev-plan.mjs",
     "plan:status": "node scripts/plan-status.mjs",

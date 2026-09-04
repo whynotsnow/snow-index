@@ -1,5 +1,7 @@
 name: Production Deploy
 
+run-name: snow-index/pages ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'candidate' }} ${{ github.event_name == 'workflow_dispatch' && inputs.request_id || github.run_id }}
+
 on:
   push:
     branches:
@@ -85,11 +87,23 @@ jobs:
       actions: write
     env:
       DEPLOY_APPROVAL_TOKEN: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+      DEPLOY_CANDIDATE_PROJECT: ${{ github.event.inputs.project_slug || 'snow-index' }}
+      DEPLOY_CANDIDATE_TARGET: ${{ github.event.inputs.target || 'pages' }}
+      DEPLOY_CANDIDATE_COMMIT_SHA: ${{ github.event.inputs.commit_sha || github.sha }}
+      DEPLOY_CANDIDATE_REQUEST_ID: ${{ github.event.inputs.request_id || format('push:{0}:{1}:snow-index:pages', github.run_id, github.run_attempt) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          ref: ${{ github.event.inputs.commit_sha || github.sha }}
           fetch-depth: 0
+
+      - name: Validate candidate dispatch contract
+        run: |
+          test "$DEPLOY_CANDIDATE_PROJECT" = snow-index
+          test "$DEPLOY_CANDIDATE_TARGET" = pages
+          test "$DEPLOY_CANDIDATE_COMMIT_SHA" = "$(git rev-parse HEAD)"
+          printf '%s' "$DEPLOY_CANDIDATE_REQUEST_ID" | grep -Eq '^[A-Za-z0-9._:-]{1,128}$'
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -105,6 +119,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Report candidate run started
+        if: github.event_name == 'push' || inputs.mode == 'candidate'
+        env:
+          DEPLOY_CANDIDATE_STATUS: in_progress
+          DEPLOY_CANDIDATE_PHASE: source_validating
+        run: node scripts/report-deployment-candidate.mjs
 
       - name: Validate source
         run: pnpm check
@@ -141,9 +162,10 @@ jobs:
           echo "artifact_digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: Register candidate artifact
+        id: register
         if: github.event_name == 'push' || inputs.mode == 'candidate'
         env:
-          DEPLOY_APPROVAL_COMMIT_SHA: ${{ github.sha }}
+          DEPLOY_APPROVAL_COMMIT_SHA: ${{ env.DEPLOY_CANDIDATE_COMMIT_SHA }}
           DEPLOY_APPROVAL_ARTIFACT_DIGEST: ${{ steps.roundtrip.outputs.artifact_digest }}
           DEPLOY_APPROVAL_ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
           DEPLOY_APPROVAL_ARTIFACT_NAME: snow-index-pages-candidate
@@ -152,6 +174,25 @@ jobs:
           DEPLOY_APPROVAL_RETENTION_DAYS: "7"
           GITHUB_RUN_ID: ${{ github.run_id }}
         run: node scripts/register-candidate-artifact.mjs
+
+      - name: Report candidate run success
+        if: github.event_name == 'push' || inputs.mode == 'candidate'
+        env:
+          DEPLOY_CANDIDATE_STATUS: completed
+          DEPLOY_CANDIDATE_CONCLUSION: success
+          DEPLOY_CANDIDATE_PHASE: artifact_registered
+          DEPLOY_CANDIDATE_ARTIFACT_ID: ${{ steps.register.outputs.artifact_id }}
+          DEPLOY_CANDIDATE_ARTIFACT_DIGEST: ${{ steps.register.outputs.artifact_digest }}
+        run: node scripts/report-deployment-candidate.mjs
+
+      - name: Report candidate run failure
+        if: failure() && (github.event_name == 'push' || inputs.mode == 'candidate')
+        env:
+          DEPLOY_CANDIDATE_STATUS: completed
+          DEPLOY_CANDIDATE_CONCLUSION: failure
+          DEPLOY_CANDIDATE_PHASE: workflow_failed
+          DEPLOY_CANDIDATE_ERROR_CODE: candidate_workflow_failed
+        run: node scripts/report-deployment-candidate.mjs
 
   selected-artifact:
     name: Deploy selected Pages artifact
@@ -209,6 +250,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Report deployment run started
+        env:
+          DEPLOY_RUN_PROJECT: ${{ inputs.project_slug }}
+          DEPLOY_RUN_TARGET: ${{ inputs.target }}
+          DEPLOY_RUN_REQUEST_ID: ${{ inputs.request_id }}
+          DEPLOY_RUN_COMMIT_SHA: ${{ inputs.commit_sha }}
+          DEPLOY_RUN_ARTIFACT_ID: ${{ inputs.artifact_id }}
+          DEPLOY_RUN_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
+          DEPLOY_RUN_STATUS: in_progress
+          DEPLOY_RUN_PHASE: workflow_started
+        run: node scripts/report-deployment-run.mjs
+
+      - name: Check snow-base public API compatibility
+        id: api_preflight
+        run: node scripts/check-api-compatibility.mjs
+
       - name: Download selected candidate artifact
         uses: actions/download-artifact@v5
         with:
@@ -238,7 +295,7 @@ jobs:
           DEPLOY_APPROVAL_ARTIFACT_NAME: ${{ inputs.artifact_name }}
           DEPLOY_APPROVAL_REQUEST_ID: ${{ inputs.request_id }}
           DEPLOY_APPROVAL_CHANGE_SUMMARY: ${{ inputs.change_summary }}
-          DEPLOY_APPROVAL_VALIDATION_SUMMARY: ${{ inputs.validation_summary }}
+          DEPLOY_APPROVAL_VALIDATION_SUMMARY: ${{ steps.api_preflight.outputs.validation_summary || inputs.validation_summary }}
           DEPLOY_APPROVAL_REQUEST_SOURCE: github-actions
           DEPLOY_APPROVAL_REQUEST_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           DEPLOY_APPROVAL_PHASE: request
@@ -270,3 +327,31 @@ jobs:
             --commit-hash "${{ inputs.commit_sha }}" \
             --commit-message "${{ inputs.commit_sha }}" \
             --commit-dirty=false
+
+      - name: Report deployment run success
+        env:
+          DEPLOY_RUN_PROJECT: ${{ inputs.project_slug }}
+          DEPLOY_RUN_TARGET: ${{ inputs.target }}
+          DEPLOY_RUN_REQUEST_ID: ${{ inputs.request_id }}
+          DEPLOY_RUN_COMMIT_SHA: ${{ inputs.commit_sha }}
+          DEPLOY_RUN_ARTIFACT_ID: ${{ inputs.artifact_id }}
+          DEPLOY_RUN_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
+          DEPLOY_RUN_STATUS: completed
+          DEPLOY_RUN_CONCLUSION: success
+          DEPLOY_RUN_PHASE: pages_deployed
+        run: node scripts/report-deployment-run.mjs
+
+      - name: Report deployment run failure
+        if: failure()
+        env:
+          DEPLOY_RUN_PROJECT: ${{ inputs.project_slug }}
+          DEPLOY_RUN_TARGET: ${{ inputs.target }}
+          DEPLOY_RUN_REQUEST_ID: ${{ inputs.request_id }}
+          DEPLOY_RUN_COMMIT_SHA: ${{ inputs.commit_sha }}
+          DEPLOY_RUN_ARTIFACT_ID: ${{ inputs.artifact_id }}
+          DEPLOY_RUN_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
+          DEPLOY_RUN_STATUS: completed
+          DEPLOY_RUN_CONCLUSION: failure
+          DEPLOY_RUN_PHASE: workflow_failed
+          DEPLOY_RUN_ERROR_CODE: selected_artifact_workflow_failed
+        run: node scripts/report-deployment-run.mjs

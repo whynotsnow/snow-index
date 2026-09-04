@@ -28,11 +28,13 @@ Workflow：
 
 该 workflow 同时承载 candidate 和 selected-artifact 两条路径：
 
-- `main` push 触发 candidate：运行 `pnpm check`，冻结唯一的 `pages-dist.tar.gz`，上传并下载 round-trip，再计算并登记 canonical digest。
-- Admin 选定 candidate 后由 `snow-base` control plane dispatch `mode=selected-artifact`，传递 immutable deployment artifact id/digest、GitHub artifact id/run/name 和 exact commit。
-- selected-artifact 先按 GitHub artifact id 和 source run id 下载归档，复验 `sha256:<64 位小写十六进制>`，解包到临时 Pages payload，再请求和消费 owner approval。
+- `main` push 或 `snow-base` deployment intent 触发 candidate：运行 `pnpm check`，冻结唯一的 `pages-dist.tar.gz`，上传并下载 round-trip，再计算并登记 canonical digest，然后用 request id 回写标准 Candidate Run。
+- Admin 的常规入口是一条 `snow-index/pages` deployment intent。控制面内部负责复用或准备 candidate、绑定 artifact、进入审批并 dispatch `mode=selected-artifact`；用户不需要手工执行“创建 Candidate → 选择 Artifact”两步。
+- Admin selected-artifact dispatch 传递 immutable deployment artifact id/digest、GitHub artifact id/run/name、request id 和 exact commit。
+- selected-artifact 先回写 deployment run 已开始，再做公开 `snow-base/api` 兼容性 preflight，然后按 GitHub artifact id 和 source run id 下载归档，复验 `sha256:<64 位小写十六进制>`，解包到临时 Pages payload，再请求和消费 owner approval。
 - owner approval 消费成功后，只从已复验的临时 payload 执行 Wrangler，不重新 build、不使用工作区 `public/`，也不按 mutable artifact name 取得授权。
-- snow-base control plane 在 Admin selected dispatch 前负责 GitHub artifact 获取、canonical 校验和 durable R2 promotion；snow-index 不请求 `deployments:artifact-promote` 或 `deployments:run-update`。
+- selected-artifact workflow 在 Pages 部署成功或失败后回写 deployment run 结果。该回写只用于中心生命周期状态，不授予 snow-index 读取、提升或重新组装中心 artifact 的能力。
+- snow-base control plane 在 Admin selected dispatch 前负责 GitHub artifact 获取、canonical 校验和 durable R2 promotion；snow-index 不请求 `deployments:artifact-promote` 或 `deployments:artifact-download`。
 
 该 workflow 的通用步骤包括：
 
@@ -41,8 +43,8 @@ Workflow：
 - 通过 Corepack 使用 Node.js 22 和 pnpm。
 - 运行 `pnpm install --frozen-lockfile`。
 - 运行 `pnpm check`。
-- candidate 路径使用 `scripts/deployment-artifact.mjs` 生成和 round-trip 校验 archive，并使用 `scripts/register-candidate-artifact.mjs` 登记 metadata。
-- selected-artifact 路径使用 `scripts/deployment-artifact.mjs` 下载后复验 canonical digest，再由 `scripts/verify-deployment-approval.mjs` 分阶段请求/消费审批。
+- candidate 路径使用 `scripts/deployment-artifact.mjs` 生成和 round-trip 校验 archive，使用 `scripts/register-candidate-artifact.mjs` 登记 metadata，并使用 `scripts/report-deployment-candidate.mjs` 回写 Candidate Run。
+- selected-artifact 路径使用 `scripts/check-api-compatibility.mjs` 做公开 API preflight，使用 `scripts/deployment-artifact.mjs` 下载后复验 canonical digest，再由 `scripts/verify-deployment-approval.mjs` 分阶段请求/消费审批，并使用 `scripts/report-deployment-run.mjs` 回写部署结果。
 - 最终使用 Wrangler 将解包 payload 中的 `public/` 和同级 Pages Functions Direct Upload 到 Cloudflare Pages project `snow-index`。
 
 必需 GitHub Environment secrets：
@@ -53,7 +55,15 @@ Workflow：
 
 Cloudflare API token 应使用能部署 `snow-index` Pages project 并读取 account context 的最小权限。不要把 token、account ID、dashboard URLs、cookies 或 raw deployment logs 写入 sidecar records。
 
-`DEPLOY_APPROVAL_TOKEN` 是在 `snow-base` Admin 中创建的 service token，只应具备 `deployments:request` 和 `deployments:verify` scopes。虽然签发系统是 `snow-base`，但该 token 是 `snow-index` 的 deployment-approval client credential，因此本仓库使用通用 GitHub secret 名称。
+`DEPLOY_APPROVAL_TOKEN` 是在 `snow-base` Admin 中创建的 service token，只应具备以下最小 scopes：
+
+```text
+deployments:request
+deployments:verify
+deployments:run-update
+```
+
+其中 `deployments:run-update` 只用于 Candidate Run 和 deployment run 的标准状态回写。虽然签发系统是 `snow-base`，但该 token 是 `snow-index` 的 deployment-approval client credential，因此本仓库使用通用 GitHub secret 名称。
 
 candidate registration 和 selected dispatch 的 artifact envelope 固定为：
 
@@ -66,7 +76,9 @@ digest: sha256:<64 lowercase hex>
 candidate retention: 7 days
 ```
 
-candidate 注册 metadata 必须同时保留 `githubArtifactId`、`githubArtifactRunId`、`githubArtifactName` 和 `canonicalArchiveName`。selected workflow 必须使用同一 `artifact_id`/digest/commit；任何下载失败、过期、归档缺失、身份不一致或 digest mismatch 都在 approval consume 前 fail closed。审批 token 仍只需要 `deployments:request`、`deployments:verify`。
+candidate 注册 metadata 必须同时保留 `githubArtifactId`、`githubArtifactRunId`、`githubArtifactName` 和 `canonicalArchiveName`。selected workflow 必须使用同一 `artifact_id`/digest/commit/request；任何下载失败、过期、归档缺失、身份不一致或 digest mismatch 都在 approval consume 前 fail closed。审批 token 仍不得包含 `deployments:artifact-promote`、`deployments:artifact-download`、API Worker、D1 或 R2 操作权限。
+
+`scripts/check-api-compatibility.mjs` 只访问公开的 `https://api.whynotsnow.com/api/v1/portal/summary` 和 `https://api.whynotsnow.com/api/v1/plaza/topics?type=all&limit=20&offset=0`，用于在 selected-artifact 审批前确认当前 snow-index 静态前端依赖的公开 API contract 可读、返回 JSON 且 shape 未明显破坏。该 preflight 不创建、审批、触发或消费 `snow-base/api` deployment run，也不携带 API/D1/R2 credential。
 
 一次性 Cloudflare 配置：
 

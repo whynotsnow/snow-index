@@ -13,7 +13,7 @@
 - 签发系统是 `snow-base`，但仓库 secret 名称应描述本地 workflow contract。
 - CI client 已读取通用环境变量 `DEPLOY_APPROVAL_TOKEN`。
 
-本地 CI client 保留 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN` 作为兼容 fallback，避免已有项目立即失效。
+本地 CI client 使用通用 `DEPLOY_APPROVAL_TOKEN`。旧 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN` 只作为 snow-base 侧迁移窗口内的兼容 alias，不再作为本仓库推荐配置。
 
 ## snow-index 改动
 
@@ -34,7 +34,10 @@ DEPLOY_APPROVAL_TOKEN
 ```text
 deployments:request
 deployments:verify
+deployments:run-update
 ```
+
+其中 `deployments:run-update` 只用于 `snow-index/pages` 的 Candidate Run 和 deployment run 状态回写。不要为 snow-index token 添加 `deployments:artifact-promote`、`deployments:artifact-download`、API Worker、D1 或 R2 操作权限。
 
 不要把 token 值写入 Git、docs、issues、sidecar records、logs 或 chat。
 
@@ -55,7 +58,7 @@ deployments:verify
 
 3. 更新脚本错误信息，优先提示通用 `DEPLOY_APPROVAL_*` 名称，旧名称只描述为兼容 alias。
 
-4. 更新 `docs/developers/deployment-approval-integration.md`，让外部项目配置 `DEPLOY_APPROVAL_TOKEN`，而不是 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN`。
+4. 更新 `docs/developers/deployment-approval-integration.md`，让外部项目配置 `DEPLOY_APPROVAL_TOKEN`，而不是 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN`；统一 Candidate Run / deployment run callback 的项目还需要最小 `deployments:run-update` scope。
 
 5. 更新 `docs/developers/deployment.md`，区分：
    - `snow-base` internal workflow compatibility，如果仍然需要。
