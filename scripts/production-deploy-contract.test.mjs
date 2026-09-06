@@ -57,8 +57,8 @@ test("candidate path reports the standard candidate run lifecycle after artifact
   assert.ok(failure > success);
   assert.match(workflow, /operation: candidate-callback[\s\S]*?callback-status: in_progress/u);
   assert.match(workflow, /operation: register-artifact[\s\S]*?metadata-json:/u);
-  assert.match(workflow, /artifact-id: \$\{\{ steps\.register\.outputs\.artifact-id \}\}/u);
-  assert.match(workflow, /artifact-digest: \$\{\{ steps\.register\.outputs\.artifact-digest \}\}/u);
+  assert.match(workflow, /artifact-id: \$\{\{ steps\.register\.outputs\['artifact-id'\] \}\}/u);
+  assert.match(workflow, /artifact-digest: \$\{\{ steps\.register\.outputs\['artifact-digest'\] \}\}/u);
 });
 
 test("selected path verifies, requests, consumes, then deploys the same payload", () => {
@@ -78,8 +78,8 @@ test("selected path verifies, requests, consumes, then deploys the same payload"
   assert.match(workflow, /--extract-to\s+"\$RUNNER_TEMP\/pages-payload"/u);
   assert.match(workflow, /operation: deployment-callback[\s\S]*?callback-status: in_progress/u);
   assert.match(workflow, /operation: request-approval[\s\S]*?idempotency-key: \$\{\{ inputs\.request_id \}\}/u);
-  assert.match(workflow, /operation: wait-approval[\s\S]*?request-id: \$\{\{ steps\.approval_request\.outputs\.request-id \}\}/u);
-  assert.match(workflow, /operation: consume-approval[\s\S]*?approval-id: \$\{\{ steps\.approval_wait\.outputs\.approval-id \}\}/u);
+  assert.match(workflow, /operation: wait-approval[\s\S]*?request-id: \$\{\{ steps\.approval_request\.outputs\['request-id'\] \}\}/u);
+  assert.match(workflow, /operation: consume-approval[\s\S]*?approval-id: \$\{\{ steps\.approval_wait\.outputs\['approval-id'\] \}\}/u);
   assert.doesNotMatch(workflow, /\b(?:apply_d1_migrations|d1_migration_risk|worker_version|create-if-missing:\s*true)\b/u);
 });
 
