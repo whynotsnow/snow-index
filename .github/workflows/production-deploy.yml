@@ -86,7 +86,6 @@ jobs:
       contents: read
       actions: write
     env:
-      DEPLOY_APPROVAL_TOKEN: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
       DEPLOY_CANDIDATE_PROJECT: ${{ github.event.inputs.project_slug || 'snow-index' }}
       DEPLOY_CANDIDATE_TARGET: ${{ github.event.inputs.target || 'pages' }}
       DEPLOY_CANDIDATE_COMMIT_SHA: ${{ github.event.inputs.commit_sha || github.sha }}
@@ -105,6 +104,15 @@ jobs:
           test "$DEPLOY_CANDIDATE_COMMIT_SHA" = "$(git rev-parse HEAD)"
           printf '%s' "$DEPLOY_CANDIDATE_REQUEST_ID" | grep -Eq '^[A-Za-z0-9._:-]{1,128}$'
 
+      - name: Check deployment approval contract
+        id: contract
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: contract
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: snow-index
+          target: pages
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
@@ -122,10 +130,18 @@ jobs:
 
       - name: Report candidate run started
         if: github.event_name == 'push' || inputs.mode == 'candidate'
-        env:
-          DEPLOY_CANDIDATE_STATUS: in_progress
-          DEPLOY_CANDIDATE_PHASE: source_validating
-        run: node scripts/report-deployment-candidate.mjs
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: candidate-callback
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ env.DEPLOY_CANDIDATE_PROJECT }}
+          target: ${{ env.DEPLOY_CANDIDATE_TARGET }}
+          commit-sha: ${{ env.DEPLOY_CANDIDATE_COMMIT_SHA }}
+          request-id: ${{ env.DEPLOY_CANDIDATE_REQUEST_ID }}
+          github-run-id: ${{ github.run_id }}
+          github-run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          callback-status: in_progress
+          phase: source_validating
 
       - name: Validate source
         run: pnpm check
@@ -161,38 +177,76 @@ jobs:
           digest="$(node scripts/deployment-artifact.mjs verify --archive "$RUNNER_TEMP/pages-roundtrip/pages-dist.tar.gz" --expected-digest "${{ steps.freeze.outputs.artifact_digest }}")"
           echo "artifact_digest=$digest" >> "$GITHUB_OUTPUT"
 
+      - name: Calculate candidate expiry
+        id: expiry
+        if: github.event_name == 'push' || inputs.mode == 'candidate'
+        run: echo "expires_at=$(date -u -d '+7 days' '+%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
       - name: Register candidate artifact
         id: register
         if: github.event_name == 'push' || inputs.mode == 'candidate'
-        env:
-          DEPLOY_APPROVAL_COMMIT_SHA: ${{ env.DEPLOY_CANDIDATE_COMMIT_SHA }}
-          DEPLOY_APPROVAL_ARTIFACT_DIGEST: ${{ steps.roundtrip.outputs.artifact_digest }}
-          DEPLOY_APPROVAL_ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
-          DEPLOY_APPROVAL_ARTIFACT_NAME: snow-index-pages-candidate
-          DEPLOY_APPROVAL_ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
-          DEPLOY_APPROVAL_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          DEPLOY_APPROVAL_RETENTION_DAYS: "7"
-          GITHUB_RUN_ID: ${{ github.run_id }}
-        run: node scripts/register-candidate-artifact.mjs
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: register-artifact
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ env.DEPLOY_CANDIDATE_PROJECT }}
+          target: ${{ env.DEPLOY_CANDIDATE_TARGET }}
+          commit-sha: ${{ env.DEPLOY_CANDIDATE_COMMIT_SHA }}
+          artifact-type: pages-dist
+          artifact-digest: ${{ steps.roundtrip.outputs.artifact_digest }}
+          storage-provider: github-actions
+          storage-key: snow-index-pages-candidate
+          artifact-role: candidate
+          request-source: github-actions
+          request-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          expires-at: ${{ steps.expiry.outputs.expires_at }}
+          build-status: succeeded
+          validation-status: succeeded
+          metadata-json: |
+            {
+              "githubArtifactId": "${{ steps.upload.outputs.artifact-id }}",
+              "githubArtifactRunId": "${{ github.run_id }}",
+              "githubArtifactName": "snow-index-pages-candidate",
+              "canonicalArchiveName": "pages-dist.tar.gz",
+              "artifactUrl": "${{ steps.upload.outputs.artifact-url }}",
+              "githubRunUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+              "retentionDays": 7
+            }
 
       - name: Report candidate run success
         if: github.event_name == 'push' || inputs.mode == 'candidate'
-        env:
-          DEPLOY_CANDIDATE_STATUS: completed
-          DEPLOY_CANDIDATE_CONCLUSION: success
-          DEPLOY_CANDIDATE_PHASE: artifact_registered
-          DEPLOY_CANDIDATE_ARTIFACT_ID: ${{ steps.register.outputs.artifact_id }}
-          DEPLOY_CANDIDATE_ARTIFACT_DIGEST: ${{ steps.register.outputs.artifact_digest }}
-        run: node scripts/report-deployment-candidate.mjs
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: candidate-callback
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ env.DEPLOY_CANDIDATE_PROJECT }}
+          target: ${{ env.DEPLOY_CANDIDATE_TARGET }}
+          commit-sha: ${{ env.DEPLOY_CANDIDATE_COMMIT_SHA }}
+          request-id: ${{ env.DEPLOY_CANDIDATE_REQUEST_ID }}
+          github-run-id: ${{ github.run_id }}
+          github-run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          callback-status: completed
+          conclusion: success
+          phase: artifact_registered
+          artifact-id: ${{ steps.register.outputs.artifact-id }}
+          artifact-digest: ${{ steps.register.outputs.artifact-digest }}
 
       - name: Report candidate run failure
         if: failure() && (github.event_name == 'push' || inputs.mode == 'candidate')
-        env:
-          DEPLOY_CANDIDATE_STATUS: completed
-          DEPLOY_CANDIDATE_CONCLUSION: failure
-          DEPLOY_CANDIDATE_PHASE: workflow_failed
-          DEPLOY_CANDIDATE_ERROR_CODE: candidate_workflow_failed
-        run: node scripts/report-deployment-candidate.mjs
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: candidate-callback
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ env.DEPLOY_CANDIDATE_PROJECT }}
+          target: ${{ env.DEPLOY_CANDIDATE_TARGET }}
+          commit-sha: ${{ env.DEPLOY_CANDIDATE_COMMIT_SHA }}
+          request-id: ${{ env.DEPLOY_CANDIDATE_REQUEST_ID }}
+          github-run-id: ${{ github.run_id }}
+          github-run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          callback-status: completed
+          conclusion: failure
+          phase: workflow_failed
+          error-code: candidate_workflow_failed
 
   selected-artifact:
     name: Deploy selected Pages artifact
@@ -206,7 +260,6 @@ jobs:
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      DEPLOY_APPROVAL_TOKEN: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
     steps:
       - name: Checkout selected commit
         uses: actions/checkout@v5
@@ -224,6 +277,7 @@ jobs:
           SELECTED_RUN_ID: ${{ inputs.artifact_run_id }}
           SELECTED_GITHUB_ID: ${{ inputs.artifact_github_id }}
           SELECTED_NAME: ${{ inputs.artifact_name }}
+          SELECTED_REQUEST: ${{ inputs.request_id }}
         run: |
           test "$SELECTED_PROJECT" = snow-index
           test "$SELECTED_TARGET" = pages
@@ -234,6 +288,17 @@ jobs:
           test "$SELECTED_RUN_ID" -gt 0
           test "$SELECTED_GITHUB_ID" -gt 0
           test "$SELECTED_NAME" = snow-index-pages-candidate
+          test "$SELECTED_REQUEST" != ""
+          printf '%s' "$SELECTED_REQUEST" | grep -Eq '^[A-Za-z0-9._:-]{1,128}$'
+
+      - name: Check deployment approval contract
+        id: contract
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: contract
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: snow-index
+          target: pages
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -251,16 +316,20 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Report deployment run started
-        env:
-          DEPLOY_RUN_PROJECT: ${{ inputs.project_slug }}
-          DEPLOY_RUN_TARGET: ${{ inputs.target }}
-          DEPLOY_RUN_REQUEST_ID: ${{ inputs.request_id }}
-          DEPLOY_RUN_COMMIT_SHA: ${{ inputs.commit_sha }}
-          DEPLOY_RUN_ARTIFACT_ID: ${{ inputs.artifact_id }}
-          DEPLOY_RUN_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
-          DEPLOY_RUN_STATUS: in_progress
-          DEPLOY_RUN_PHASE: workflow_started
-        run: node scripts/report-deployment-run.mjs
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: deployment-callback
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ inputs.project_slug }}
+          target: ${{ inputs.target }}
+          commit-sha: ${{ inputs.commit_sha }}
+          request-id: ${{ inputs.request_id }}
+          artifact-id: ${{ inputs.artifact_id }}
+          artifact-digest: ${{ inputs.artifact_digest }}
+          github-run-id: ${{ github.run_id }}
+          github-run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          callback-status: in_progress
+          phase: workflow_started
 
       - name: Check snow-base public API compatibility
         id: api_preflight
@@ -283,40 +352,48 @@ jobs:
             --extract-to "$RUNNER_TEMP/pages-payload"
 
       - name: Request and wait for owner approval
-        id: approval
-        env:
-          DEPLOY_APPROVAL_PROJECT: ${{ inputs.project_slug }}
-          DEPLOY_APPROVAL_TARGET: ${{ inputs.target }}
-          DEPLOY_APPROVAL_COMMIT_SHA: ${{ inputs.commit_sha }}
-          DEPLOY_APPROVAL_ARTIFACT_TYPE: pages-dist
-          DEPLOY_APPROVAL_ARTIFACT_ID: ${{ inputs.artifact_id }}
-          DEPLOY_APPROVAL_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
-          DEPLOY_APPROVAL_ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id }}
-          DEPLOY_APPROVAL_ARTIFACT_NAME: ${{ inputs.artifact_name }}
-          DEPLOY_APPROVAL_REQUEST_ID: ${{ inputs.request_id }}
-          DEPLOY_APPROVAL_CHANGE_SUMMARY: ${{ inputs.change_summary }}
-          DEPLOY_APPROVAL_VALIDATION_SUMMARY: ${{ steps.api_preflight.outputs.validation_summary || inputs.validation_summary }}
-          DEPLOY_APPROVAL_REQUEST_SOURCE: github-actions
-          DEPLOY_APPROVAL_REQUEST_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          DEPLOY_APPROVAL_PHASE: request
-          DEPLOY_APPROVAL_WAIT_SECONDS: "900"
-        run: node scripts/verify-deployment-approval.mjs
+        id: approval_request
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: request-approval
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ inputs.project_slug }}
+          target: ${{ inputs.target }}
+          commit-sha: ${{ inputs.commit_sha }}
+          artifact-id: ${{ inputs.artifact_id }}
+          artifact-digest: ${{ inputs.artifact_digest }}
+          change-summary: ${{ inputs.change_summary }}
+          validation-summary: ${{ steps.api_preflight.outputs.validation_summary || inputs.validation_summary }}
+          request-source: github-actions
+          request-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          idempotency-key: ${{ inputs.request_id }}
+
+      - name: Wait for owner approval
+        id: approval_wait
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: wait-approval
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ inputs.project_slug }}
+          target: ${{ inputs.target }}
+          commit-sha: ${{ inputs.commit_sha }}
+          request-id: ${{ steps.approval_request.outputs.request-id }}
+          artifact-id: ${{ inputs.artifact_id }}
+          artifact-digest: ${{ inputs.artifact_digest }}
+          wait-seconds: "900"
+          poll-seconds: "15"
 
       - name: Consume exact owner approval
-        env:
-          DEPLOY_APPROVAL_PROJECT: ${{ inputs.project_slug }}
-          DEPLOY_APPROVAL_TARGET: ${{ inputs.target }}
-          DEPLOY_APPROVAL_COMMIT_SHA: ${{ inputs.commit_sha }}
-          DEPLOY_APPROVAL_ARTIFACT_TYPE: pages-dist
-          DEPLOY_APPROVAL_ARTIFACT_ID: ${{ inputs.artifact_id }}
-          DEPLOY_APPROVAL_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
-          DEPLOY_APPROVAL_ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id }}
-          DEPLOY_APPROVAL_ARTIFACT_NAME: ${{ inputs.artifact_name }}
-          DEPLOY_APPROVAL_ID: ${{ steps.approval.outputs.approval_id }}
-          DEPLOY_APPROVAL_REQUEST_SOURCE: github-actions
-          DEPLOY_APPROVAL_REQUEST_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          DEPLOY_APPROVAL_PHASE: consume
-        run: node scripts/verify-deployment-approval.mjs
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: consume-approval
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ inputs.project_slug }}
+          target: ${{ inputs.target }}
+          commit-sha: ${{ inputs.commit_sha }}
+          approval-id: ${{ steps.approval_wait.outputs.approval-id }}
+          artifact-id: ${{ inputs.artifact_id }}
+          artifact-digest: ${{ inputs.artifact_digest }}
 
       - name: Deploy verified canonical payload
         working-directory: ${{ runner.temp }}/pages-payload
@@ -329,29 +406,37 @@ jobs:
             --commit-dirty=false
 
       - name: Report deployment run success
-        env:
-          DEPLOY_RUN_PROJECT: ${{ inputs.project_slug }}
-          DEPLOY_RUN_TARGET: ${{ inputs.target }}
-          DEPLOY_RUN_REQUEST_ID: ${{ inputs.request_id }}
-          DEPLOY_RUN_COMMIT_SHA: ${{ inputs.commit_sha }}
-          DEPLOY_RUN_ARTIFACT_ID: ${{ inputs.artifact_id }}
-          DEPLOY_RUN_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
-          DEPLOY_RUN_STATUS: completed
-          DEPLOY_RUN_CONCLUSION: success
-          DEPLOY_RUN_PHASE: pages_deployed
-        run: node scripts/report-deployment-run.mjs
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: deployment-callback
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ inputs.project_slug }}
+          target: ${{ inputs.target }}
+          commit-sha: ${{ inputs.commit_sha }}
+          request-id: ${{ inputs.request_id }}
+          artifact-id: ${{ inputs.artifact_id }}
+          artifact-digest: ${{ inputs.artifact_digest }}
+          github-run-id: ${{ github.run_id }}
+          github-run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          callback-status: completed
+          conclusion: success
+          phase: pages_deployed
 
       - name: Report deployment run failure
         if: failure()
-        env:
-          DEPLOY_RUN_PROJECT: ${{ inputs.project_slug }}
-          DEPLOY_RUN_TARGET: ${{ inputs.target }}
-          DEPLOY_RUN_REQUEST_ID: ${{ inputs.request_id }}
-          DEPLOY_RUN_COMMIT_SHA: ${{ inputs.commit_sha }}
-          DEPLOY_RUN_ARTIFACT_ID: ${{ inputs.artifact_id }}
-          DEPLOY_RUN_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
-          DEPLOY_RUN_STATUS: completed
-          DEPLOY_RUN_CONCLUSION: failure
-          DEPLOY_RUN_PHASE: workflow_failed
-          DEPLOY_RUN_ERROR_CODE: selected_artifact_workflow_failed
-        run: node scripts/report-deployment-run.mjs
+        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        with:
+          operation: deployment-callback
+          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          project-slug: ${{ inputs.project_slug }}
+          target: ${{ inputs.target }}
+          commit-sha: ${{ inputs.commit_sha }}
+          request-id: ${{ inputs.request_id }}
+          artifact-id: ${{ inputs.artifact_id }}
+          artifact-digest: ${{ inputs.artifact_digest }}
+          github-run-id: ${{ github.run_id }}
+          github-run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          callback-status: completed
+          conclusion: failure
+          phase: workflow_failed
+          error-code: selected_artifact_workflow_failed

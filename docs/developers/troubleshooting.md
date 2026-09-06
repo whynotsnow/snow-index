@@ -46,7 +46,7 @@ pnpm check
 
 ## 生产部署审批失败
 
-生产 workflow 先通过 candidate 路径冻结并登记 `pages-dist`，selected-artifact 路径再下载同一 GitHub artifact、复验 canonical digest，并由 `scripts/verify-deployment-approval.mjs` 分阶段请求/消费审批。
+生产 workflow 先通过 candidate 路径冻结并登记 `pages-dist`，selected-artifact 路径再下载同一 GitHub artifact、复验 canonical digest，并由固定 SHA 的公开 deployment approval Action 分阶段请求、等待和消费审批。
 
 审批失败时默认 fail closed。不要用本地 `wrangler pages deploy`、手工 artifacts 或未推送 commit 绕过审批流程；没有特殊情况或维护者书面说明时，修复配置后重新运行 GitHub Actions production workflow。
 
@@ -55,7 +55,7 @@ pnpm check
 - GitHub `production` environment 缺少 `DEPLOY_APPROVAL_TOKEN`。
 - `snow-base` Admin 未注册 `snow-index/pages`。
 - token scope 缺少 `deployments:request`、`deployments:verify` 或标准状态回写所需的 `deployments:run-update`。
-- Candidate Run 或 deployment run callback 的 request id、project、target、commit、artifact id/digest 或 GitHub run id 与中心记录不一致。
+- Candidate Run 或 deployment run callback 的 request id、project、target、commit、artifact id/digest 或 GitHub run id 与中心记录不一致；应先检查 workflow 中 Action 的 immutable pin 和对应输入。
 - owner 拒绝或审批等待超时。
 - selected-artifact 审批前的公开 API preflight 失败：`/api/v1/portal/summary` 或 `/api/v1/plaza/topics?type=all&limit=20&offset=0` 不可访问、不是 JSON，或返回 shape 明显不符合 snow-index 预期。
 - `pages-dist.tar.gz` 缺失、不是唯一归档、candidate 已过期，或 GitHub artifact id/run/name 与登记 metadata 不一致。

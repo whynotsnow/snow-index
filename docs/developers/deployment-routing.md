@@ -26,12 +26,17 @@ Workflow：
 .github/workflows/production-deploy.yml
 ```
 
+生产 workflow 固定使用公开 `snow-base` deployment approval Action 的完整 commit SHA：
+`whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1`。
+`v1.0.0` 仅是可读版本别名，不作为生产供应链边界。
+
 该 workflow 同时承载 candidate 和 selected-artifact 两条路径：
 
 - `main` push 或 `snow-base` deployment intent 触发 candidate：运行 `pnpm check`，冻结唯一的 `pages-dist.tar.gz`，上传并下载 round-trip，再计算并登记 canonical digest，然后用 request id 回写标准 Candidate Run。
 - Admin 的常规入口是一条 `snow-index/pages` deployment intent。控制面内部负责复用或准备 candidate、绑定 artifact、进入审批并 dispatch `mode=selected-artifact`；用户不需要手工执行“创建 Candidate → 选择 Artifact”两步。
 - Admin selected-artifact dispatch 传递 immutable deployment artifact id/digest、GitHub artifact id/run/name、request id 和 exact commit。
-- selected-artifact 先回写 deployment run 已开始，再做公开 `snow-base/api` 兼容性 preflight，然后按 GitHub artifact id 和 source run id 下载归档，复验 `sha256:<64 位小写十六进制>`，解包到临时 Pages payload，再请求和消费 owner approval。
+- 两条路径先用固定 SHA 的 Action 读取 `snow-index/pages` contract；candidate 还用该 Action 登记 artifact、回写 Candidate Run，selected-artifact 用该 Action 回写 deployment run、请求/等待/消费 owner approval。
+- selected-artifact 先回写 deployment run 已开始，再做公开 `snow-base/api` 兼容性 preflight，然后按 GitHub artifact id 和 source run id 下载归档，复验 `sha256:<64 位小写十六进制>`，解包到临时 Pages payload，再请求、等待和消费 owner approval。
 - owner approval 消费成功后，只从已复验的临时 payload 执行 Wrangler，不重新 build、不使用工作区 `public/`，也不按 mutable artifact name 取得授权。
 - selected-artifact workflow 在 Pages 部署成功或失败后回写 deployment run 结果。该回写只用于中心生命周期状态，不授予 snow-index 读取、提升或重新组装中心 artifact 的能力。
 - snow-base control plane 在 Admin selected dispatch 前负责 GitHub artifact 获取、canonical 校验和 durable R2 promotion；snow-index 不请求 `deployments:artifact-promote` 或 `deployments:artifact-download`。
@@ -43,8 +48,9 @@ Workflow：
 - 通过 Corepack 使用 Node.js 22 和 pnpm。
 - 运行 `pnpm install --frozen-lockfile`。
 - 运行 `pnpm check`。
-- candidate 路径使用 `scripts/deployment-artifact.mjs` 生成和 round-trip 校验 archive，使用 `scripts/register-candidate-artifact.mjs` 登记 metadata，并使用 `scripts/report-deployment-candidate.mjs` 回写 Candidate Run。
-- selected-artifact 路径使用 `scripts/check-api-compatibility.mjs` 做公开 API preflight，使用 `scripts/deployment-artifact.mjs` 下载后复验 canonical digest，再由 `scripts/verify-deployment-approval.mjs` 分阶段请求/消费审批，并使用 `scripts/report-deployment-run.mjs` 回写部署结果。
+- candidate 路径使用 `scripts/deployment-artifact.mjs` 生成和 round-trip 校验 archive，再由固定 SHA 的 Action 登记 metadata 并回写 Candidate Run。
+- selected-artifact 路径使用 `scripts/check-api-compatibility.mjs` 做公开 API preflight，使用 `scripts/deployment-artifact.mjs` 下载后复验 canonical digest，再由固定 SHA 的 Action 分阶段请求/等待/消费审批并回写部署结果。
+- 旧的本地 API client 脚本已删除；workflow 不通过 PAT checkout 私有 `snow-base`，也不复制中心协议实现。
 - 最终使用 Wrangler 将解包 payload 中的 `public/` 和同级 Pages Functions Direct Upload 到 Cloudflare Pages project `snow-index`。
 
 必需 GitHub Environment secrets：

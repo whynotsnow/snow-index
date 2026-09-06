@@ -11,14 +11,14 @@
 - 该凭据由 `snow-index` 生产 workflow 消费。
 - 权限用途是 deployment approval，不是通用 `snow-base` access。
 - 签发系统是 `snow-base`，但仓库 secret 名称应描述本地 workflow contract。
-- CI client 已读取通用环境变量 `DEPLOY_APPROVAL_TOKEN`。
+- 公开 Action 使用通用 `DEPLOY_APPROVAL_TOKEN`。
 
-本地 CI client 使用通用 `DEPLOY_APPROVAL_TOKEN`。旧 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN` 只作为 snow-base 侧迁移窗口内的兼容 alias，不再作为本仓库推荐配置。
+公开 Action 使用通用 `DEPLOY_APPROVAL_TOKEN`。旧 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN` 只作为 snow-base 侧迁移窗口内的兼容 alias，不再作为本仓库推荐配置。
 
 ## snow-index 改动
 
-- `.github/workflows/production-deploy.yml` 从 `${{ secrets.DEPLOY_APPROVAL_TOKEN }}` 映射 `DEPLOY_APPROVAL_TOKEN`。
-- `scripts/verify-deployment-approval.mjs` 优先报告通用变量名，并把旧 `SNOW_BASE_*` 名称仅视作兼容路径。
+- `.github/workflows/production-deploy.yml` 将 `${{ secrets.DEPLOY_APPROVAL_TOKEN }}` 传给固定 SHA 的公开 deployment approval Action。
+- Action 负责通用 contract、artifact registration、approval 和 callback 协议调用；本仓库不再维护重复的本地 API client 脚本。
 - `docs/developers/deployment-routing.md` 将 `DEPLOY_APPROVAL_TOKEN` 记录为必需的 production Environment secret。
 
 ## 必需 GitHub 配置
