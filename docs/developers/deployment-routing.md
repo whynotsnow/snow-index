@@ -27,8 +27,8 @@ Workflow：
 ```
 
 生产 workflow 固定使用公开 `snow-base` deployment approval Action 的完整 commit SHA：
-`whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1`。
-`v1.0.0` 仅是可读版本别名，不作为生产供应链边界。
+`whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac`。
+`v1.0.1` 仅是可读版本别名，不作为生产供应链边界；旧 `v1.0.0` pin 不再使用。
 
 该 workflow 同时承载 candidate 和 selected-artifact 两条路径：
 

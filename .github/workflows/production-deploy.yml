@@ -106,7 +106,7 @@ jobs:
 
       - name: Check deployment approval contract
         id: contract
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: contract
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -130,7 +130,7 @@ jobs:
 
       - name: Report candidate run started
         if: github.event_name == 'push' || inputs.mode == 'candidate'
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: candidate-callback
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -185,7 +185,7 @@ jobs:
       - name: Register candidate artifact
         id: register
         if: github.event_name == 'push' || inputs.mode == 'candidate'
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: register-artifact
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -215,7 +215,7 @@ jobs:
 
       - name: Report candidate run success
         if: github.event_name == 'push' || inputs.mode == 'candidate'
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: candidate-callback
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -233,7 +233,7 @@ jobs:
 
       - name: Report candidate run failure
         if: failure() && (github.event_name == 'push' || inputs.mode == 'candidate')
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: candidate-callback
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -293,7 +293,7 @@ jobs:
 
       - name: Check deployment approval contract
         id: contract
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: contract
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -316,7 +316,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Report deployment run started
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: deployment-callback
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -353,7 +353,7 @@ jobs:
 
       - name: Request and wait for owner approval
         id: approval_request
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: request-approval
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -370,7 +370,7 @@ jobs:
 
       - name: Wait for owner approval
         id: approval_wait
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: wait-approval
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -384,7 +384,7 @@ jobs:
           poll-seconds: "15"
 
       - name: Consume exact owner approval
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: consume-approval
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -406,7 +406,7 @@ jobs:
             --commit-dirty=false
 
       - name: Report deployment run success
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: deployment-callback
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
@@ -424,7 +424,7 @@ jobs:
 
       - name: Report deployment run failure
         if: failure()
-        uses: whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1
+        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: deployment-callback
           token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}

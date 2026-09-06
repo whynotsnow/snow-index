@@ -4,7 +4,7 @@ import test from "node:test";
 
 const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
 const apiPreflight = readFileSync("scripts/check-api-compatibility.mjs", "utf8");
-const actionPin = "whynotsnow/snow-base-deployment-approval-action@c87a2dc06f9c5b20b6d29e48ebd6294cecb704d1";
+const actionPin = "whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac";
 
 test("production workflow exposes candidate and selected-artifact paths", () => {
   for (const phrase of [
