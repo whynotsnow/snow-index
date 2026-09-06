@@ -377,7 +377,7 @@ jobs:
           project-slug: ${{ inputs.project_slug }}
           target: ${{ inputs.target }}
           commit-sha: ${{ inputs.commit_sha }}
-          request-id: ${{ steps.approval_request.outputs['request-id'] }}
+          request-id: ${{ steps.approval_request.outputs['approval-id'] }}
           artifact-id: ${{ inputs.artifact_id }}
           artifact-digest: ${{ inputs.artifact_digest }}
           wait-seconds: "900"
@@ -391,7 +391,7 @@ jobs:
           project-slug: ${{ inputs.project_slug }}
           target: ${{ inputs.target }}
           commit-sha: ${{ inputs.commit_sha }}
-          approval-id: ${{ steps.approval_wait.outputs['approval-id'] }}
+          approval-id: ${{ steps.approval_request.outputs['approval-id'] }}
           artifact-id: ${{ inputs.artifact_id }}
           artifact-digest: ${{ inputs.artifact_digest }}
 
