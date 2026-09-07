@@ -88,23 +88,17 @@ if (!response.ok || body?.ok !== true) {
 }
 
 const data = body.data ?? {};
-const run = data.run ?? data.deploymentRun ?? {};
-const deploymentRunId =
-  data.deploymentRunId ??
-  data.deployment_run_id ??
-  data.runId ??
-  run.deploymentRunId ??
-  run.deployment_run_id ??
-  run.id;
-if (!deploymentRunId || typeof deploymentRunId !== "string") {
-  fail("回写 deployment run 成功，但中心响应未返回精确 deployment run id。");
+const deploymentRunId = data.id;
+if (typeof deploymentRunId !== "string" || !deploymentRunId) {
+  const keys = Object.keys(data).sort().join(",");
+  fail(`回写 deployment run 成功，但中心响应未返回 body.data.id。response_keys=${keys}`);
 }
 
 if (process.env.GITHUB_OUTPUT) {
   const { appendFileSync } = await import("node:fs");
   appendFileSync(
     process.env.GITHUB_OUTPUT,
-    `deployment-run-id=${deploymentRunId}\ndeployment_run_id=${deploymentRunId}\nstatus=${data.status ?? run.status ?? status}\n`,
+    `deployment-run-id=${deploymentRunId}\ndeployment_run_id=${deploymentRunId}\nstatus=${data.status ?? status}\n`,
     "utf8",
   );
 }

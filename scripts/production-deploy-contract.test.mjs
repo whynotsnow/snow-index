@@ -94,7 +94,7 @@ test("selected path verifies, requests, consumes, then deploys the same payload"
   assert.match(workflow, /operation: consume-approval[\s\S]*?approval-id: \$\{\{ steps\.approval_request\.outputs\['approval-id'\] \}\}/u);
   assert.match(workflow, /DEPLOY_RUN_STATUS: completed[\s\S]*?DEPLOY_RUN_CONCLUSION: success[\s\S]*?DEPLOY_RUN_PHASE: pages_deployed/u);
   assert.match(workflow, /DEPLOY_SMOKE_DEPLOYMENT_RUN_ID: \$\{\{ steps\.deployment_success\.outputs\.deployment-run-id \}\}/u);
-  assert.match(workflow, /if: failure\(\) && steps\.deployment_success\.outcome != 'success'/u);
+  assert.match(workflow, /if: failure\(\) && steps\.deployment_success\.conclusion == 'skipped'/u);
   assert.doesNotMatch(workflow, /\b(?:apply_d1_migrations|d1_migration_risk|worker_version|create-if-missing:\s*true)\b/u);
 });
 
@@ -111,7 +111,8 @@ test("project-owned run callback emits the exact deployment run id from the cent
   assert.match(deploymentRunReporter, /\/api\/v1\/deployments\/runs\/update/u);
   assert.match(deploymentRunReporter, /deployment-run-id=/u);
   assert.match(deploymentRunReporter, /deployment_run_id=/u);
-  assert.match(deploymentRunReporter, /中心响应未返回精确 deployment run id/u);
+  assert.match(deploymentRunReporter, /const deploymentRunId = data\.id/u);
+  assert.match(deploymentRunReporter, /中心响应未返回 body\.data\.id/u);
   assert.doesNotMatch(deploymentRunReporter, /(?:createIfMissing|artifact-promote|artifact-download|applyD1Migrations|d1MigrationRisk|workerVersion)/u);
 });
 
