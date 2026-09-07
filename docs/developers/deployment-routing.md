@@ -35,10 +35,12 @@ Workflow：
 - `main` push 或 `snow-base` deployment intent 触发 candidate：运行 `pnpm check`，冻结唯一的 `pages-dist.tar.gz`，上传并下载 round-trip，再计算并登记 canonical digest，然后用 request id 回写标准 Candidate Run。
 - Admin 的常规入口是一条 `snow-index/pages` deployment intent。控制面内部负责复用或准备 candidate、绑定 artifact、进入审批并 dispatch `mode=selected-artifact`；用户不需要手工执行“创建 Candidate → 选择 Artifact”两步。
 - Admin selected-artifact dispatch 传递 immutable deployment artifact id/digest、GitHub artifact id/run/name、request id 和 exact commit。
-- 两条路径先用固定 SHA 的 Action 读取 `snow-index/pages` contract；candidate 还用该 Action 登记 artifact、回写 Candidate Run，selected-artifact 用该 Action 回写 deployment run、请求/等待/消费 owner approval。
+- 两条路径先用固定 SHA 的 Action 读取 `snow-index/pages` contract；candidate 还用该 Action 登记 artifact、回写 Candidate Run，selected-artifact 用该 Action 回写 deployment run started/failure、请求/等待/消费 owner approval。
 - selected-artifact 先回写 deployment run 已开始，再做公开 `snow-base/api` 兼容性 preflight，然后按 GitHub artifact id 和 source run id 下载归档，复验 `sha256:<64 位小写十六进制>`，解包到临时 Pages payload，再请求、等待和消费 owner approval。
 - owner approval 消费成功后，只从已复验的临时 payload 执行 Wrangler，不重新 build、不使用工作区 `public/`，也不按 mutable artifact name 取得授权。
-- selected-artifact workflow 在 Pages 部署成功或失败后回写 deployment run 结果。该回写只用于中心生命周期状态，不授予 snow-index 读取、提升或重新组装中心 artifact 的能力。
+- selected-artifact workflow 在 Pages 部署成功后使用项目自有的最小 `scripts/report-deployment-run.mjs` 回写 `completed/success`，并从中心 response 取得精确 deployment run id；随后用 `scripts/report-smoke-evidence.mjs` 对 `https://whynotsnow.com/` 和 `https://whynotsnow.com/robots.txt` 做 run-bound public smoke，并 POST 到中心 integration evidence endpoint。
+- smoke evidence 的 `outcome` 必须是字符串 `succeeded` 或 `failed`；失败时只附 sanitized `failureCode`。smoke 失败会让 workflow 失败，但不会尝试把已成功的 deployment run 改回 failure。
+- selected-artifact workflow 在失败后仍用固定 SHA 的 Action 回写 deployment run failure。所有 deployment run 回写只用于中心生命周期状态，不授予 snow-index 读取、提升或重新组装中心 artifact 的能力。
 - snow-base control plane 在 Admin selected dispatch 前负责 GitHub artifact 获取、canonical 校验和 durable R2 promotion；snow-index 不请求 `deployments:artifact-promote` 或 `deployments:artifact-download`。
 
 该 workflow 的通用步骤包括：
@@ -49,8 +51,8 @@ Workflow：
 - 运行 `pnpm install --frozen-lockfile`。
 - 运行 `pnpm check`。
 - candidate 路径使用 `scripts/deployment-artifact.mjs` 生成和 round-trip 校验 archive，再由固定 SHA 的 Action 登记 metadata 并回写 Candidate Run。
-- selected-artifact 路径使用 `scripts/check-api-compatibility.mjs` 做公开 API preflight，使用 `scripts/deployment-artifact.mjs` 下载后复验 canonical digest，再由固定 SHA 的 Action 分阶段请求/等待/消费审批并回写部署结果。
-- 旧的本地 API client 脚本已删除；workflow 不通过 PAT checkout 私有 `snow-base`，也不复制中心协议实现。
+- selected-artifact 路径使用 `scripts/check-api-compatibility.mjs` 做公开 API preflight，使用 `scripts/deployment-artifact.mjs` 下载后复验 canonical digest，再由固定 SHA 的 Action 分阶段请求/等待/消费审批；Pages deploy 成功后由 `scripts/report-deployment-run.mjs` 和 `scripts/report-smoke-evidence.mjs` 记录 run-bound smoke evidence 和最终 success。
+- 项目自有 API client 仅保留 deployment run success id 捕获和 smoke evidence fallback；workflow 不通过 PAT checkout 私有 `snow-base`，也不复制 candidate、artifact registration 或 approval 协议实现。
 - 最终使用 Wrangler 将解包 payload 中的 `public/` 和同级 Pages Functions Direct Upload 到 Cloudflare Pages project `snow-index`。
 
 必需 GitHub Environment secrets：
@@ -69,7 +71,7 @@ deployments:verify
 deployments:run-update
 ```
 
-其中 `deployments:run-update` 只用于 Candidate Run 和 deployment run 的标准状态回写。虽然签发系统是 `snow-base`，但该 token 是 `snow-index` 的 deployment-approval client credential，因此本仓库使用通用 GitHub secret 名称。
+其中 `deployments:run-update` 只用于 Candidate Run、deployment run 的标准状态回写，以及与精确 deployment run 绑定的 smoke evidence 写入。虽然签发系统是 `snow-base`，但该 token 是 `snow-index` 的 deployment-approval client credential，因此本仓库使用通用 GitHub secret 名称。
 
 candidate registration 和 selected dispatch 的 artifact envelope 固定为：
 
@@ -85,6 +87,8 @@ candidate retention: 7 days
 candidate 注册 metadata 必须同时保留 `githubArtifactId`、`githubArtifactRunId`、`githubArtifactName` 和 `canonicalArchiveName`。selected workflow 必须使用同一 `artifact_id`/digest/commit/request；任何下载失败、过期、归档缺失、身份不一致或 digest mismatch 都在 approval consume 前 fail closed。审批 token 仍不得包含 `deployments:artifact-promote`、`deployments:artifact-download`、API Worker、D1 或 R2 操作权限。
 
 `scripts/check-api-compatibility.mjs` 只访问公开的 `https://api.whynotsnow.com/api/v1/portal/summary` 和 `https://api.whynotsnow.com/api/v1/plaza/topics?type=all&limit=20&offset=0`，用于在 selected-artifact 审批前确认当前 snow-index 静态前端依赖的公开 API contract 可读、返回 JSON 且 shape 未明显破坏。该 preflight 不创建、审批、触发或消费 `snow-base/api` deployment run，也不携带 API/D1/R2 credential。
+
+`scripts/report-smoke-evidence.mjs` 只在 Pages deploy 成功且 deployment run 已回写为 `success` 后执行，且必须使用 `scripts/report-deployment-run.mjs` 从中心 `/api/v1/deployments/runs/update` response 取得的精确 deployment run id。不得通过 request id、approval id、GitHub run id、artifact id 或字符串拼接推断 deployment run id。该 smoke evidence 只证明本次 `snow-index/pages` deployment run 的公开站点结果，不代表 `snow-base/api` deployment intent 或联合验收。
 
 一次性 Cloudflare 配置：
 
@@ -170,6 +174,7 @@ Preview deployments 不得依赖 private tokens 或 protected APIs。当 `api.wh
 
 - `pnpm check` 通过。
 - GitHub Actions `Production Deploy` 从 `origin/main` 成功运行。
+- selected-artifact run 已记录 run-bound public smoke evidence：`https://whynotsnow.com/` 和 `https://whynotsnow.com/robots.txt`。
 - `/`、`/plaza/` 和 `/plaza/t/<known-topic>` 在 preview 中渲染。
 - custom domain `whynotsnow.com` 已绑定到静态托管项目。
 - `www.whynotsnow.com` 重定向到 `https://whynotsnow.com`。

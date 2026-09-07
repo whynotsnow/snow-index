@@ -58,11 +58,14 @@ pnpm check
 - Candidate Run 或 deployment run callback 的 request id、project、target、commit、artifact id/digest 或 GitHub run id 与中心记录不一致；应先检查 workflow 中 Action 的 immutable pin 和对应输入。
 - owner 拒绝或审批等待超时。
 - selected-artifact 审批前的公开 API preflight 失败：`/api/v1/portal/summary` 或 `/api/v1/plaza/topics?type=all&limit=20&offset=0` 不可访问、不是 JSON，或返回 shape 明显不符合 snow-index 预期。
+- Pages deploy 成功后的 deployment run success callback 没有从中心 response 返回精确 deployment run id；此时不得用 request id、GitHub run id 或 artifact id 伪造 smoke evidence。
+- run-bound public smoke 失败：`https://whynotsnow.com/` 未返回预期 Portal 导航，或 `https://whynotsnow.com/robots.txt` 未返回预期 robots/sitemap 内容。
+- smoke evidence POST 到 `/api/v1/deployments/integration-evidence/smoke` 失败；请求体的 `outcome` 必须是字符串 `succeeded` 或 `failed`，失败时只附 sanitized `failureCode`。检查 token scope 是否仍是最小 `deployments:request`、`deployments:verify`、`deployments:run-update`，不要升级到 artifact/API/D1/R2 权限。
 - `pages-dist.tar.gz` 缺失、不是唯一归档、candidate 已过期，或 GitHub artifact id/run/name 与登记 metadata 不一致。
 - 下载后的 tar 路径、mode、owner、mtime、entry type 或 digest 不符合 canonical contract。
 - selected-artifact workflow 使用了错误 commit，或尝试从工作区 `public/` 重新部署。
 
-恢复规则：artifact 过期或已消费时重新生成 candidate，不复用旧 approval；digest mismatch、artifact identity mismatch 和中心 promotion 失败时停止 workflow，交由 snow-base control plane 修复或重新 dispatch。`deployments:run-update` 只允许用于标准 Candidate Run / deployment run callback；不要向 snow-index token 增加 `deployments:artifact-promote`、`deployments:artifact-download`、API Worker、D1 或 R2 权限来绕过中心化 promotion。
+恢复规则：artifact 过期或已消费时重新生成 candidate，不复用旧 approval；digest mismatch、artifact identity mismatch 和中心 promotion 失败时停止 workflow，交由 snow-base control plane 修复或重新 dispatch。`deployments:run-update` 只允许用于标准 Candidate Run / deployment run callback 和 run-bound smoke evidence；不要向 snow-index token 增加 `deployments:artifact-promote`、`deployments:artifact-download`、API Worker、D1 或 R2 权限来绕过中心化 promotion。
 
 不要把 token、raw response、private dashboard URL 或平台资源 ID 写入 issue、sidecar run 或文档。记录最小稳定错误签名、需要维护者执行的外部动作，以及 workflow 是否停在审批前还是审批后。
 

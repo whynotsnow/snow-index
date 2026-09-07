@@ -406,24 +406,36 @@ jobs:
             --commit-dirty=false
 
       - name: Report deployment run success
-        uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
-        with:
-          operation: deployment-callback
-          token: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
-          project-slug: ${{ inputs.project_slug }}
-          target: ${{ inputs.target }}
-          commit-sha: ${{ inputs.commit_sha }}
-          request-id: ${{ inputs.request_id }}
-          artifact-id: ${{ inputs.artifact_id }}
-          artifact-digest: ${{ inputs.artifact_digest }}
-          github-run-id: ${{ github.run_id }}
-          github-run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          callback-status: completed
-          conclusion: success
-          phase: pages_deployed
+        id: deployment_success
+        env:
+          DEPLOY_APPROVAL_TOKEN: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          DEPLOY_RUN_PROJECT: ${{ inputs.project_slug }}
+          DEPLOY_RUN_TARGET: ${{ inputs.target }}
+          DEPLOY_RUN_REQUEST_ID: ${{ inputs.request_id }}
+          DEPLOY_RUN_COMMIT_SHA: ${{ inputs.commit_sha }}
+          DEPLOY_RUN_ARTIFACT_ID: ${{ inputs.artifact_id }}
+          DEPLOY_RUN_ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
+          DEPLOY_RUN_STATUS: completed
+          DEPLOY_RUN_CONCLUSION: success
+          DEPLOY_RUN_PHASE: pages_deployed
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/report-deployment-run.mjs
+
+      - name: Report run-bound public smoke evidence
+        env:
+          DEPLOY_APPROVAL_TOKEN: ${{ secrets.DEPLOY_APPROVAL_TOKEN }}
+          DEPLOY_SMOKE_PROJECT: ${{ inputs.project_slug }}
+          DEPLOY_SMOKE_TARGET: ${{ inputs.target }}
+          DEPLOY_SMOKE_DEPLOYMENT_RUN_ID: ${{ steps.deployment_success.outputs.deployment-run-id }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/report-smoke-evidence.mjs
 
       - name: Report deployment run failure
-        if: failure()
+        if: failure() && steps.deployment_success.outcome != 'success'
         uses: whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac
         with:
           operation: deployment-callback

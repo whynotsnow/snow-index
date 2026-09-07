@@ -4,6 +4,8 @@ import test from "node:test";
 
 const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");
 const apiPreflight = readFileSync("scripts/check-api-compatibility.mjs", "utf8");
+const deploymentRunReporter = readFileSync("scripts/report-deployment-run.mjs", "utf8");
+const smokeReporter = readFileSync("scripts/report-smoke-evidence.mjs", "utf8");
 const actionPin = "whynotsnow/snow-base-deployment-approval-action@76c3396eaa0635ef8de2c8668b77d939a292cbac";
 
 test("production workflow exposes candidate and selected-artifact paths", () => {
@@ -30,6 +32,7 @@ test("production workflow exposes candidate and selected-artifact paths", () => 
     "Request and wait for owner approval",
     "Wait for owner approval",
     "Consume exact owner approval",
+    "Report run-bound public smoke evidence",
     "Report deployment run success",
     "Report deployment run failure",
     "Check snow-base public API compatibility",
@@ -37,9 +40,9 @@ test("production workflow exposes candidate and selected-artifact paths", () => 
     assert.ok(workflow.includes(phrase), `workflow missing ${phrase}`);
   }
   assert.ok(workflow.includes(actionPin));
-  assert.equal(workflow.split(actionPin).length - 1, 12);
+  assert.equal(workflow.split(actionPin).length - 1, 11);
   assert.doesNotMatch(workflow, /deployments:artifact-(?:promote|download)/u);
-  assert.doesNotMatch(workflow, /scripts\/(?:register-candidate-artifact|report-deployment-candidate|report-deployment-run|verify-deployment-approval)\.mjs/u);
+  assert.doesNotMatch(workflow, /scripts\/(?:register-candidate-artifact|report-deployment-candidate|verify-deployment-approval)\.mjs/u);
   assert.doesNotMatch(workflow, /\b(?:apply_d1_migrations|d1_migration_risk|worker_version|DEPLOY_RUN_CREATE_IF_MISSING)\b/u);
   assert.match(workflow, /retention-days: 7/u);
   assert.match(workflow, /actions: write/u);
@@ -70,9 +73,18 @@ test("selected path verifies, requests, consumes, then deploys the same payload"
   const wait = workflow.indexOf("Wait for owner approval");
   const consume = workflow.indexOf("Consume exact owner approval");
   const deploy = workflow.indexOf("Deploy verified canonical payload");
+  const smoke = workflow.indexOf("Report run-bound public smoke evidence");
   const success = workflow.indexOf("Report deployment run success");
   assert.ok(contract >= 0 && contract < runStarted && runStarted < preflight && preflight < verify);
-  assert.ok(verify >= 0 && verify < request && request < wait && wait < consume && consume < deploy && deploy < success);
+  assert.ok(
+    verify >= 0 &&
+      verify < request &&
+      request < wait &&
+      wait < consume &&
+      consume < deploy &&
+      deploy < success &&
+      success < smoke,
+  );
   assert.match(workflow, /wrangler.*pages deploy public/su);
   assert.match(workflow, /--expected-digest\s+"\$\{\{ inputs\.artifact_digest \}\}"/u);
   assert.match(workflow, /--extract-to\s+"\$RUNNER_TEMP\/pages-payload"/u);
@@ -80,6 +92,9 @@ test("selected path verifies, requests, consumes, then deploys the same payload"
   assert.match(workflow, /operation: request-approval[\s\S]*?idempotency-key: \$\{\{ inputs\.request_id \}\}/u);
   assert.match(workflow, /operation: wait-approval[\s\S]*?request-id: \$\{\{ steps\.approval_request\.outputs\['approval-id'\] \}\}/u);
   assert.match(workflow, /operation: consume-approval[\s\S]*?approval-id: \$\{\{ steps\.approval_request\.outputs\['approval-id'\] \}\}/u);
+  assert.match(workflow, /DEPLOY_RUN_STATUS: completed[\s\S]*?DEPLOY_RUN_CONCLUSION: success[\s\S]*?DEPLOY_RUN_PHASE: pages_deployed/u);
+  assert.match(workflow, /DEPLOY_SMOKE_DEPLOYMENT_RUN_ID: \$\{\{ steps\.deployment_success\.outputs\.deployment-run-id \}\}/u);
+  assert.match(workflow, /if: failure\(\) && steps\.deployment_success\.outcome != 'success'/u);
   assert.doesNotMatch(workflow, /\b(?:apply_d1_migrations|d1_migration_risk|worker_version|create-if-missing:\s*true)\b/u);
 });
 
@@ -90,4 +105,27 @@ test("public API preflight checks only external read-only contracts", () => {
     apiPreflight,
     /\b(?:Authorization|DEPLOY_APPROVAL_TOKEN|CLOUDFLARE_|wrangler)\b|method:\s*["'](?:POST|PUT|DELETE)["']/u,
   );
+});
+
+test("project-owned run callback emits the exact deployment run id from the center response", () => {
+  assert.match(deploymentRunReporter, /\/api\/v1\/deployments\/runs\/update/u);
+  assert.match(deploymentRunReporter, /deployment-run-id=/u);
+  assert.match(deploymentRunReporter, /deployment_run_id=/u);
+  assert.match(deploymentRunReporter, /中心响应未返回精确 deployment run id/u);
+  assert.doesNotMatch(deploymentRunReporter, /(?:createIfMissing|artifact-promote|artifact-download|applyD1Migrations|d1MigrationRisk|workerVersion)/u);
+});
+
+test("run-bound smoke evidence uses only public pages and the exact deployment run id", () => {
+  assert.match(smokeReporter, /https:\/\/whynotsnow\.com\//u);
+  assert.match(smokeReporter, /https:\/\/whynotsnow\.com\/robots\.txt/u);
+  assert.match(smokeReporter, /\/api\/v1\/deployments\/integration-evidence\/smoke/u);
+  assert.match(smokeReporter, /deploymentRunId/u);
+  assert.match(smokeReporter, /DEPLOY_SMOKE_DEPLOYMENT_RUN_ID/u);
+  assert.match(smokeReporter, /succeeded/u);
+  assert.match(smokeReporter, /failed/u);
+  assert.match(smokeReporter, /failureCode/u);
+  assert.match(smokeReporter, /projectSlug/u);
+  assert.match(smokeReporter, /target/u);
+  assert.doesNotMatch(smokeReporter, /outcome = \{/u);
+  assert.doesNotMatch(smokeReporter, /(?:CLOUDFLARE_|wrangler|artifact-promote|artifact-download|applyD1|D1|R2)/u);
 });

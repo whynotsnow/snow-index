@@ -18,7 +18,7 @@
 ## snow-index 改动
 
 - `.github/workflows/production-deploy.yml` 将 `${{ secrets.DEPLOY_APPROVAL_TOKEN }}` 传给固定 SHA 的公开 deployment approval Action。
-- Action 负责通用 contract、artifact registration、approval 和 callback 协议调用；本仓库不再维护重复的本地 API client 脚本。
+- Action 负责通用 contract、artifact registration、candidate callback、selected start/failure callback 和 approval 协议调用；本仓库仅保留最小 deployment run success id 捕获与 smoke evidence fallback client。
 - `docs/developers/deployment-routing.md` 将 `DEPLOY_APPROVAL_TOKEN` 记录为必需的 production Environment secret。
 
 ## 必需 GitHub 配置
@@ -37,7 +37,7 @@ deployments:verify
 deployments:run-update
 ```
 
-其中 `deployments:run-update` 只用于 `snow-index/pages` 的 Candidate Run 和 deployment run 状态回写。不要为 snow-index token 添加 `deployments:artifact-promote`、`deployments:artifact-download`、API Worker、D1 或 R2 操作权限。
+其中 `deployments:run-update` 只用于 `snow-index/pages` 的 Candidate Run、deployment run 状态回写和 run-bound smoke evidence。不要为 snow-index token 添加 `deployments:artifact-promote`、`deployments:artifact-download`、API Worker、D1 或 R2 操作权限。
 
 不要把 token 值写入 Git、docs、issues、sidecar records、logs 或 chat。
 
