@@ -6,7 +6,7 @@ const root = process.cwd();
 const jsonMode = process.argv.includes("--json");
 const schemaVersion = 3;
 const phases = {
-  demand: ["discussing", "needs-decision", "decided", "deferred"],
+  demand: ["discussing", "decided", "deferred"],
   execution: ["ready", "running", "blocked", "done"],
   archive: ["archived"],
 };
@@ -51,7 +51,6 @@ const payload = {
   counts, rms, tasks, boards: { rm: { items: rms }, task: { items: tasks } },
   items, executable: tasks.filter((item) => item.phase === "execution" && ["ready", "running"].includes(item.status)).map((item) => item.id).sort(),
   blocked: tasks.filter((item) => item.phase === "execution" && item.status === "blocked").map((item) => item.id).sort(),
-  needsDecision: rms.filter((item) => item.phase === "demand" && item.status === "needs-decision").map((item) => item.id).sort(),
 };
 if (jsonMode) console.log(JSON.stringify(payload, null, 2));
 else {
