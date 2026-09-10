@@ -12,7 +12,7 @@
 - `docs/developers/`: human-facing implementation guidance.
 - `docs/agents/`: agent-facing reusable project knowledge.
 - `public/`: public site assets and static frontend surface when present.
-- `../snow-index.plan`: adjacent planning sidecar for decisions, run records, validation notes, and handoffs.
+- `../snow-index.sidecar`: adjacent planning sidecar for decisions, run records, validation notes, and handoffs.
 
 ## Architecture boundaries
 

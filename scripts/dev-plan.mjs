@@ -11,7 +11,7 @@ function locatePlanRoot() {
   const candidates = [];
   const explicitPath = process.env.SNOW_INDEX_SIDECAR_PATH?.trim();
   if (explicitPath) candidates.push(isAbsolute(explicitPath) ? explicitPath : resolve(repoRoot, explicitPath));
-  candidates.push(resolve(repoRoot, "..", "snow-index.plan"));
+  candidates.push(resolve(repoRoot, "..", "snow-index.sidecar"));
   try {
     const commonDirValue = execFileSync("git", ["rev-parse", "--git-common-dir"], {
       cwd: repoRoot,
@@ -20,17 +20,17 @@ function locatePlanRoot() {
     }).trim();
     if (commonDirValue) {
       const commonDir = isAbsolute(commonDirValue) ? commonDirValue : resolve(repoRoot, commonDirValue);
-      candidates.push(resolve(dirname(commonDir), "..", "snow-index.plan"));
+      candidates.push(resolve(dirname(commonDir), "..", "snow-index.sidecar"));
     }
   } catch {
     // The sibling candidate is sufficient for a regular checkout.
   }
   return candidates
     .filter((candidate, index) => candidates.indexOf(candidate) === index)
-    .find((candidate) => existsSync(resolve(candidate, "plan.config.json")));
+    .find((candidate) => existsSync(resolve(candidate, "sidecar.config.json")));
 }
 
-const planRoot = locatePlanRoot() ?? resolve(repoRoot, "..", "snow-index.plan");
+const planRoot = locatePlanRoot() ?? resolve(repoRoot, "..", "snow-index.sidecar");
 const planRootDisplay = relative(repoRoot, planRoot) || ".";
 const planPackage = resolve(planRoot, "package.json");
 const planServer = resolve(planRoot, "server.mjs");

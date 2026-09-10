@@ -14,7 +14,7 @@
 - Blog long-form content remains in `blog.whynotsnow.com`.
 - Private operations remain in `snow-base` and `admin.whynotsnow.com`.
 - Plaza backend APIs, moderation, D1, R2, Turnstile, and admin workflows are planned in `snow-base`.
-- Planning records live in the adjacent `../snow-index.plan` sidecar.
+- Planning records live in the adjacent `../snow-index.sidecar` sidecar.
 
 ## Commands
 

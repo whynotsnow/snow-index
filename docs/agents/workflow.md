@@ -23,7 +23,7 @@ Agent Workspace local state directories are private and ignored:
 - `.agent-workspace/raw/`
 - `.agent-workspace/quarantine/`
 
-Do not copy local/raw/quarantine contents into tracked docs, sidecar runs, or handoffs. Agent Workspace does not replace the adjacent planning sidecar; `../snow-index.plan` still owns plan-bound execution records.
+Do not copy local/raw/quarantine contents into tracked docs, sidecar runs, or handoffs. Agent Workspace does not replace the adjacent planning sidecar; `../snow-index.sidecar` still owns plan-bound execution records.
 
 ## Documentation maintenance
 
@@ -36,7 +36,7 @@ Do not copy local/raw/quarantine contents into tracked docs, sidecar runs, or ha
 
 ## Planning sidecar
 
-- Use `../snow-index.plan` for planning, decisions, executable plans, sanitized run records, validation notes, and handoffs.
+- Use `../snow-index.sidecar` for planning, decisions, executable plans, sanitized run records, validation notes, and handoffs.
 - Inspect sidecar items with `pnpm --silent plan:status --json`.
 - Do not implement sidecar items unless their status is `ready` or `running`.
 - Main-repo commits that directly execute a sidecar item must include `Plan-Item: <id>`. Related non-execution commits may use `Related-Plan: <id>`.

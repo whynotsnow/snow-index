@@ -6,7 +6,7 @@ This repository is the planned public portal for `whynotsnow.com`.
 
 - Project name: `snow-index`.
 - Product role: main-domain portal, navigation page, Plaza frontend entry, and public aggregation surface.
-- Adjacent planning sidecar: `../snow-index.plan`.
+- Adjacent planning sidecar: `../snow-index.sidecar`.
 - Package manager: pnpm only.
 
 ## Architecture Boundaries
@@ -19,7 +19,7 @@ This repository is the planned public portal for `whynotsnow.com`.
 
 ## Planning Sidecar
 
-- Use `../snow-index.plan` for planning, decisions, executable plans, sanitized run records, validation notes, and handoffs.
+- Use `../snow-index.sidecar` for planning, decisions, executable plans, sanitized run records, validation notes, and handoffs.
 - Use `pnpm --silent plan:status --json` to inspect sidecar items.
 - Do not implement sidecar items unless their status is `ready` or `running`.
 - Product source, deployable files, runtime configuration, and product documentation stay in this repository.
@@ -66,7 +66,7 @@ Do not claim a command passed unless it was actually run in this workspace and o
 - `.agent-workspace/manifest.json` declares the project-local Agent Workspace contract.
 - `.agent-workspace/tools/agent-workspace.mjs` owns local Agent Workspace validation.
 - `.agent-workspace/local/`, `.agent-workspace/raw/`, and `.agent-workspace/quarantine/` are ignored private local state and must not be tracked or copied into docs, sidecar records, or handoffs.
-- Agent Workspace does not replace `../snow-index.plan`; the sidecar still owns planning items, plans, decisions, runs, validation notes, and handoffs.
+- Agent Workspace does not replace `../snow-index.sidecar`; the sidecar still owns planning items, plans, decisions, runs, validation notes, and handoffs.
 
 ## Sound Cues
 
