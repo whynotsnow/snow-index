@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-function locatePlanRoot() {
+function locateSidecarRoot() {
   const candidates = [];
   const explicitPath = process.env.SNOW_INDEX_SIDECAR_PATH?.trim();
   if (explicitPath) candidates.push(isAbsolute(explicitPath) ? explicitPath : resolve(repoRoot, explicitPath));
@@ -30,10 +30,10 @@ function locatePlanRoot() {
     .find((candidate) => existsSync(resolve(candidate, "sidecar.config.json")));
 }
 
-const planRoot = locatePlanRoot() ?? resolve(repoRoot, "..", "snow-index.sidecar");
-const planRootDisplay = relative(repoRoot, planRoot) || ".";
-const planPackage = resolve(planRoot, "package.json");
-const planServer = resolve(planRoot, "server.mjs");
+const sidecarRoot = locateSidecarRoot() ?? resolve(repoRoot, "..", "snow-index.sidecar");
+const sidecarRootDisplay = relative(repoRoot, sidecarRoot) || ".";
+const sidecarPackage = resolve(sidecarRoot, "package.json");
+const sidecarServer = resolve(sidecarRoot, "server.mjs");
 const port = process.env.PORT || "4177";
 
 async function assertFile(path, message) {
@@ -46,32 +46,32 @@ async function assertFile(path, message) {
 }
 
 await assertFile(
-  planPackage,
+  sidecarPackage,
   [
-    `Missing sidecar planning repository at ${planRootDisplay}.`,
-    "Restore or create the sidecar before running `pnpm plan`.",
+    `Missing sidecar repository at ${sidecarRootDisplay}.`,
+    "Restore or create the sidecar before running `pnpm sidecar`.",
   ].join("\n"),
 );
 
 await assertFile(
-  planServer,
+  sidecarServer,
   [
-    `Found ${planRootDisplay}, but it does not contain server.mjs.`,
-    "Check that the sidecar planning board has been initialized.",
+    `Found ${sidecarRootDisplay}, but it does not contain server.mjs.`,
+    "Check that the sidecar preview board has been initialized.",
   ].join("\n"),
 );
 
-console.log(`Starting snow-index plan board on http://localhost:${port}`);
-console.log("Use PORT=<port> pnpm plan to choose another port.");
+console.log(`Starting snow-index sidecar preview on http://localhost:${port}`);
+console.log("Use PORT=<port> pnpm sidecar to choose another port.");
 
-const child = spawn(process.execPath, [planServer], {
-  cwd: planRoot,
+const child = spawn(process.execPath, [sidecarServer], {
+  cwd: sidecarRoot,
   env: { ...process.env, PORT: port },
   stdio: "inherit",
 });
 
 child.on("error", (error) => {
-  console.error(`Failed to start plan board: ${error.message}`);
+  console.error(`Failed to start sidecar preview: ${error.message}`);
   process.exit(1);
 });
 

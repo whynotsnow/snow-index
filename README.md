@@ -21,8 +21,8 @@
 ```bash
 pnpm dev
 pnpm check
-pnpm plan
-pnpm plan:status
+pnpm sidecar
+pnpm sidecar:status
 ```
 
 ## Current MVP

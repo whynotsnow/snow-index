@@ -20,7 +20,7 @@ This repository is the planned public portal for `whynotsnow.com`.
 ## Planning Sidecar
 
 - Use `../snow-index.sidecar` for planning, decisions, executable plans, sanitized run records, validation notes, and handoffs.
-- Use `pnpm --silent plan:status --json` to inspect sidecar items.
+- Use `pnpm --silent sidecar:status --json` to inspect sidecar items.
 - Do not implement sidecar items unless their status is `ready` or `running`.
 - Product source, deployable files, runtime configuration, and product documentation stay in this repository.
 - Main-repo commits that directly execute a sidecar item must include `Plan-Item: <id>`. Related non-execution commits may use `Related-Plan: <id>`.
@@ -28,8 +28,8 @@ This repository is the planned public portal for `whynotsnow.com`.
 
 ## Commands
 
-- `pnpm plan:status`: print adjacent sidecar planning board status.
-- `pnpm plan`: start the adjacent sidecar preview board.
+- `pnpm sidecar:status`: print adjacent sidecar RM/task status.
+- `pnpm sidecar`: start the adjacent sidecar preview board.
 - `pnpm check`: run static project validation.
 - `pnpm agent:validate`: validate Agent Workspace structure and disclosure basics.
 - `pnpm cue:attention`: play the project attention cue before stopping for required user input.

@@ -13,8 +13,8 @@ Do not record the detected state of a particular developer, machine, or session 
 | Static check command | Validate current static frontend surface | `pnpm check` |
 | Agent Workspace validation | Validate workspace manifest, ignored local state, and public docs contract | `pnpm agent:validate` |
 | Local preview command | Run the public portal locally | `pnpm dev` |
-| Sidecar status command | Inspect adjacent planning board before executing plan-bound work | `pnpm --silent plan:status --json` |
-| Sidecar preview command | Open the adjacent planning board | `pnpm plan` |
+| Sidecar status command | Inspect adjacent RM/task board before executing plan-bound work | `pnpm --silent sidecar:status --json` |
+| Sidecar preview command | Open the adjacent sidecar preview board | `pnpm sidecar` |
 | Local sound cue command | Notify owner about attention-worthy local agent events | `pnpm cue:*` scripts |
 
 ## Capability resolution

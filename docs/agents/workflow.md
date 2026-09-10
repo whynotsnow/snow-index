@@ -37,7 +37,7 @@ Do not copy local/raw/quarantine contents into tracked docs, sidecar runs, or ha
 ## Planning sidecar
 
 - Use `../snow-index.sidecar` for planning, decisions, executable plans, sanitized run records, validation notes, and handoffs.
-- Inspect sidecar items with `pnpm --silent plan:status --json`.
+- Inspect sidecar items with `pnpm --silent sidecar:status --json`.
 - Do not implement sidecar items unless their status is `ready` or `running`.
 - Main-repo commits that directly execute a sidecar item must include `Plan-Item: <id>`. Related non-execution commits may use `Related-Plan: <id>`.
 - A main-repo commit must link at most one `Plan-Item` by default.
