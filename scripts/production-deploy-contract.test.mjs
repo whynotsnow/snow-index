@@ -41,6 +41,12 @@ test("production workflow exposes candidate and selected-artifact paths", () => 
   }
   assert.ok(workflow.includes(actionPin));
   assert.equal(workflow.split(actionPin).length - 1, 11);
+  assert.equal(
+    workflow.split("secrets.DEPLOY_APPROVAL_TOKEN_EXCHANGE").length - 1,
+    13,
+    "all workflow credential consumers must use the exchange secret",
+  );
+  assert.doesNotMatch(workflow, /secrets\.DEPLOY_APPROVAL_TOKEN(?!_EXCHANGE)/u);
   assert.doesNotMatch(workflow, /deployments:artifact-(?:promote|download)/u);
   assert.doesNotMatch(workflow, /scripts\/(?:register-candidate-artifact|report-deployment-candidate|verify-deployment-approval)\.mjs/u);
   assert.doesNotMatch(workflow, /\b(?:apply_d1_migrations|d1_migration_risk|worker_version|DEPLOY_RUN_CREATE_IF_MISSING)\b/u);

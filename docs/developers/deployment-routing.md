@@ -59,11 +59,13 @@ Workflow：
 
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
-- `DEPLOY_APPROVAL_TOKEN`
+- `DEPLOY_APPROVAL_TOKEN_EXCHANGE`
+
+`DEPLOY_APPROVAL_TOKEN` 保留为 legacy rollback secret。在 exchange Credential 的 Candidate、selected-artifact、Pages smoke 和 rollback evidence 完成前，不要删除、禁用或撤销旧 secret/credential。
 
 Cloudflare API token 应使用能部署 `snow-index` Pages project 并读取 account context 的最小权限。不要把 token、account ID、dashboard URLs、cookies 或 raw deployment logs 写入 sidecar records。
 
-`DEPLOY_APPROVAL_TOKEN` 是在 `snow-base` Admin 中创建的 service token，只应具备以下最小 scopes：
+`DEPLOY_APPROVAL_TOKEN_EXCHANGE` 是在 `snow-base` Admin 中为 `snow-index` 创建的独立短期 service token，只应具备以下最小 scopes：
 
 ```text
 deployments:request
@@ -71,7 +73,7 @@ deployments:verify
 deployments:run-update
 ```
 
-其中 `deployments:run-update` 只用于 Candidate Run、deployment run 的标准状态回写，以及与精确 deployment run 绑定的 smoke evidence 写入。虽然签发系统是 `snow-base`，但该 token 是 `snow-index` 的 deployment-approval client credential，因此本仓库使用通用 GitHub secret 名称。
+其中 `deployments:run-update` 只用于 Candidate Run、deployment run 的标准状态回写，以及与精确 deployment run 绑定的 smoke evidence 写入。虽然签发系统是 `snow-base`，但该 token 是 `snow-index` 的 deployment-approval client credential，因此使用独立的 exchange secret 名称。该 token 不得包含 `deployments:artifact-promote` 或 `deployments:artifact-download`。
 
 candidate registration 和 selected dispatch 的 artifact envelope 固定为：
 
@@ -97,7 +99,7 @@ candidate 注册 metadata 必须同时保留 `githubArtifactId`、`githubArtifac
 - 将 `whynotsnow.com` 绑定为 production custom domain。
 - 将 `www.whynotsnow.com` 配置为 host-level redirect，目标是 `https://whynotsnow.com`。
 - 在 `snow-base` Admin deployment projects 中注册 `snow-index`，并允许 target `pages`。
-- 将 `DEPLOY_APPROVAL_TOKEN` 添加到 GitHub `production` Environment secrets。
+- 将 `DEPLOY_APPROVAL_TOKEN_EXCHANGE` 添加到 GitHub `production` Environment secrets；旧 `DEPLOY_APPROVAL_TOKEN` 仅保留为回滚窗口。
 
 异常路径不是常规发布手段。只有维护者在执行前明确批准，并写明为什么不能使用 GitHub Actions 审批路径时，才可以考虑异常部署。即使进入异常处理，也应优先把修复提交推送到远端并重新运行 production workflow。
 

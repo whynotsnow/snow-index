@@ -4,32 +4,32 @@
 
 ## 当前决策
 
-在 `snow-index` 中使用 `DEPLOY_APPROVAL_TOKEN` 作为 GitHub `production` Environment secret 名称。
+在 `snow-index` 中使用 `DEPLOY_APPROVAL_TOKEN_EXCHANGE` 作为 GitHub `production` Environment secret 名称。
 
 理由：
 
-- 该凭据由 `snow-index` 生产 workflow 消费。
+- 该交换凭据由 `snow-index` 生产 workflow 消费。
 - 权限用途是 deployment approval，不是通用 `snow-base` access。
 - 签发系统是 `snow-base`，但仓库 secret 名称应描述本地 workflow contract。
-- 公开 Action 使用通用 `DEPLOY_APPROVAL_TOKEN`。
+- 旧 `DEPLOY_APPROVAL_TOKEN` 保留为 legacy rollback secret；迁移完成前不删除或撤销。
 
-公开 Action 使用通用 `DEPLOY_APPROVAL_TOKEN`。旧 `SNOW_BASE_DEPLOY_APPROVAL_TOKEN` 只作为 snow-base 侧迁移窗口内的兼容 alias，不再作为本仓库推荐配置。
+公开 Action 使用 `DEPLOY_APPROVAL_TOKEN_EXCHANGE`。旧 `DEPLOY_APPROVAL_TOKEN` 只作为本仓库 rollback window 保留；`SNOW_BASE_DEPLOY_APPROVAL_TOKEN` 仍仅作为 snow-base 侧迁移窗口内的兼容 alias，不在本仓库使用。
 
 ## snow-index 改动
 
-- `.github/workflows/production-deploy.yml` 将 `${{ secrets.DEPLOY_APPROVAL_TOKEN }}` 传给固定 SHA 的公开 deployment approval Action。
+- `.github/workflows/production-deploy.yml` 将 `${{ secrets.DEPLOY_APPROVAL_TOKEN_EXCHANGE }}` 传给固定 SHA 的公开 deployment approval Action。
 - Action 负责通用 contract、artifact registration、candidate callback、selected start/failure callback 和 approval 协议调用；本仓库仅保留最小 deployment run success id 捕获与 smoke evidence fallback client。
-- `docs/developers/deployment-routing.md` 将 `DEPLOY_APPROVAL_TOKEN` 记录为必需的 production Environment secret。
+- `docs/developers/deployment-routing.md` 将 `DEPLOY_APPROVAL_TOKEN_EXCHANGE` 记录为必需的 production Environment secret，并保留旧 secret 的回滚说明。
 
 ## 必需 GitHub 配置
 
 在 `whynotsnow/snow-index` -> `Settings` -> `Environments` -> `production` 中配置：
 
 ```text
-DEPLOY_APPROVAL_TOKEN
+DEPLOY_APPROVAL_TOKEN_EXCHANGE
 ```
 
-该值应是 `snow-base` Admin 创建的 service token，并且只具备：
+该值应是 `snow-base` Admin 为 `snow-index` 创建的短期 service token，并且只具备：
 
 ```text
 deployments:request
@@ -37,7 +37,7 @@ deployments:verify
 deployments:run-update
 ```
 
-其中 `deployments:run-update` 只用于 `snow-index/pages` 的 Candidate Run、deployment run 状态回写和 run-bound smoke evidence。不要为 snow-index token 添加 `deployments:artifact-promote`、`deployments:artifact-download`、API Worker、D1 或 R2 操作权限。
+其中 `deployments:run-update` 只用于 `snow-index/pages` 的 Candidate Run、deployment run 状态回写和 run-bound smoke evidence。不要为 snow-index token 添加 `deployments:artifact-promote`、`deployments:artifact-download`、API Worker、D1 或 R2 操作权限。旧 `DEPLOY_APPROVAL_TOKEN` 保留用于回滚，不在迁移验证完成前删除或撤销。
 
 不要把 token 值写入 Git、docs、issues、sidecar records、logs 或 chat。
 

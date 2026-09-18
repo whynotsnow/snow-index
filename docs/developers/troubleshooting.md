@@ -52,7 +52,7 @@ pnpm check
 
 常见失败类别：
 
-- GitHub `production` environment 缺少 `DEPLOY_APPROVAL_TOKEN`。
+- GitHub `production` environment 缺少 `DEPLOY_APPROVAL_TOKEN_EXCHANGE`；旧 `DEPLOY_APPROVAL_TOKEN` 只作为 rollback window 保留。
 - `snow-base` Admin 未注册 `snow-index/pages`。
 - token scope 缺少 `deployments:request`、`deployments:verify` 或标准状态回写所需的 `deployments:run-update`。
 - Candidate Run 或 deployment run callback 的 request id、project、target、commit、artifact id/digest 或 GitHub run id 与中心记录不一致；应先检查 workflow 中 Action 的 immutable pin 和对应输入。
