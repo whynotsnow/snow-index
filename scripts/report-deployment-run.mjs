@@ -2,6 +2,7 @@ const apiBaseUrl = (
   process.env.DEPLOY_APPROVAL_API_BASE_URL ?? "https://api.whynotsnow.com"
 ).replace(/\/+$/u, "");
 const token = process.env.DEPLOY_APPROVAL_TOKEN;
+const tokenMode = process.env.DEPLOY_APPROVAL_TOKEN_MODE;
 const projectSlug = process.env.DEPLOY_RUN_PROJECT ?? "snow-index";
 const target = process.env.DEPLOY_RUN_TARGET ?? "pages";
 const requestId = process.env.DEPLOY_RUN_REQUEST_ID;
@@ -32,6 +33,11 @@ function requiredFields(fields) {
 }
 
 if (!token) fail("缺少 DEPLOY_APPROVAL_TOKEN。");
+if (!["exchange", "legacy-break-glass"].includes(tokenMode)) {
+  fail(
+    "DEPLOY_APPROVAL_TOKEN_MODE 必须显式设置为 exchange；旧 bearer 仅允许 legacy-break-glass。",
+  );
+}
 requiredFields({
   DEPLOY_RUN_REQUEST_ID: requestId,
   DEPLOY_RUN_COMMIT_SHA: commitSha,

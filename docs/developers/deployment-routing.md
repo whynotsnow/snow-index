@@ -92,6 +92,8 @@ candidate 注册 metadata 必须同时保留 `githubArtifactId`、`githubArtifac
 
 `scripts/report-smoke-evidence.mjs` 只在 Pages deploy 成功且 deployment run 已回写为 `success` 后执行，且必须使用 `scripts/report-deployment-run.mjs` 从中心 `/api/v1/deployments/runs/update` response 取得的精确 deployment run id。不得通过 request id、approval id、GitHub run id、artifact id 或字符串拼接推断 deployment run id。该 smoke evidence 只证明本次 `snow-index/pages` deployment run 的公开站点结果，不代表 `snow-base/api` deployment intent 或联合验收。
 
+两个项目自有 bearer client 都要求非 secret 的 `DEPLOY_APPROVAL_TOKEN_MODE`：现行 production workflow 显式设置为 `exchange`，即使兼容环境变量名仍是 `DEPLOY_APPROVAL_TOKEN`，也不会把 exchange token 当作旧 bearer。旧 `DEPLOY_APPROVAL_TOKEN` 或旧 Admin Credential 只有在维护者明确授权的 `legacy-break-glass` 模式下才允许用于回滚/应急；缺少 mode 或使用未知 mode 时 client fail closed。现代 workflow 不设置 `legacy-break-glass`。
+
 一次性 Cloudflare 配置：
 
 - 创建或确认名为 `snow-index` 的 Cloudflare Pages project。

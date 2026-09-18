@@ -3,6 +3,7 @@ const apiBaseUrl = (
 ).replace(/\/+$/u, "");
 const smokeOnly = process.argv.includes("--smoke-only") || process.env.DEPLOY_SMOKE_ONLY === "1";
 const token = process.env.DEPLOY_APPROVAL_TOKEN;
+const tokenMode = process.env.DEPLOY_APPROVAL_TOKEN_MODE;
 const projectSlug = process.env.DEPLOY_SMOKE_PROJECT ?? "snow-index";
 const target = process.env.DEPLOY_SMOKE_TARGET ?? "pages";
 const deploymentRunId = process.env.DEPLOY_SMOKE_DEPLOYMENT_RUN_ID;
@@ -42,6 +43,11 @@ if (target !== "pages") fail("DEPLOY_SMOKE_TARGET 必须是 pages。");
 if (!smokeOnly) {
   if (!token) fail("缺少 DEPLOY_APPROVAL_TOKEN。");
   if (!deploymentRunId) fail("缺少 DEPLOY_SMOKE_DEPLOYMENT_RUN_ID。");
+  if (!["exchange", "legacy-break-glass"].includes(tokenMode)) {
+    fail(
+      "DEPLOY_APPROVAL_TOKEN_MODE 必须显式设置为 exchange；旧 bearer 仅允许 legacy-break-glass。",
+    );
+  }
 }
 
 const results = [];
@@ -106,9 +112,8 @@ if (!smokeOnly) {
   }
 }
 
-console.log(
-  `${smokeOnly ? "public smoke" : "run-bound smoke evidence"} ${outcome}: ${results
-    .map((result) => `${result.name}=${result.status}`)
-    .join(" ")}`,
-);
+const summary = `${smokeOnly ? "public smoke" : "run-bound smoke evidence"} ${outcome}: ${results
+  .map((result) => `${result.name}=${result.status}`)
+  .join(" ")}`;
+console.log(`${summary}${smokeOnly ? "" : ` auth_mode=${tokenMode}`}`);
 if (!succeeded) fail("公开站点 smoke 未通过。");

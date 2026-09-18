@@ -55,6 +55,7 @@ pnpm check
 - GitHub `production` environment 缺少 `DEPLOY_APPROVAL_TOKEN_EXCHANGE`；旧 `DEPLOY_APPROVAL_TOKEN` 只作为 rollback window 保留。
 - `snow-base` Admin 未注册 `snow-index/pages`。
 - token scope 缺少 `deployments:request`、`deployments:verify` 或标准状态回写所需的 `deployments:run-update`。
+- `DEPLOY_APPROVAL_TOKEN_MODE` 缺失或未知：现代 production workflow 必须是 `exchange`；只有明确授权的旧 bearer 回滚/应急流程才可使用 `legacy-break-glass`。
 - Candidate Run 或 deployment run callback 的 request id、project、target、commit、artifact id/digest 或 GitHub run id 与中心记录不一致；应先检查 workflow 中 Action 的 immutable pin 和对应输入。
 - owner 拒绝或审批等待超时。
 - selected-artifact 审批前的公开 API preflight 失败：`/api/v1/portal/summary` 或 `/api/v1/plaza/topics?type=all&limit=20&offset=0` 不可访问、不是 JSON，或返回 shape 明显不符合 snow-index 预期。

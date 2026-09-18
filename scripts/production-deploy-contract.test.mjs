@@ -101,6 +101,8 @@ test("selected path verifies, requests, consumes, then deploys the same payload"
   assert.match(workflow, /DEPLOY_RUN_STATUS: completed[\s\S]*?DEPLOY_RUN_CONCLUSION: success[\s\S]*?DEPLOY_RUN_PHASE: pages_deployed/u);
   assert.match(workflow, /DEPLOY_SMOKE_DEPLOYMENT_RUN_ID: \$\{\{ steps\.deployment_success\.outputs\.deployment-run-id \}\}/u);
   assert.match(workflow, /if: failure\(\) && steps\.deployment_success\.conclusion == 'skipped'/u);
+  assert.match(workflow, /DEPLOY_APPROVAL_TOKEN_MODE: exchange/u);
+  assert.doesNotMatch(workflow, /DEPLOY_APPROVAL_TOKEN_MODE:\s*legacy-break-glass/u);
   assert.doesNotMatch(workflow, /\b(?:apply_d1_migrations|d1_migration_risk|worker_version|create-if-missing:\s*true)\b/u);
 });
 
@@ -119,6 +121,8 @@ test("project-owned run callback emits the exact deployment run id from the cent
   assert.match(deploymentRunReporter, /deployment_run_id=/u);
   assert.match(deploymentRunReporter, /const deploymentRunId = data\.id/u);
   assert.match(deploymentRunReporter, /中心响应未返回 body\.data\.id/u);
+  assert.match(deploymentRunReporter, /DEPLOY_APPROVAL_TOKEN_MODE/u);
+  assert.match(deploymentRunReporter, /legacy-break-glass/u);
   assert.doesNotMatch(deploymentRunReporter, /(?:createIfMissing|artifact-promote|artifact-download|applyD1Migrations|d1MigrationRisk|workerVersion)/u);
 });
 
@@ -133,6 +137,9 @@ test("run-bound smoke evidence uses only public pages and the exact deployment r
   assert.match(smokeReporter, /failureCode/u);
   assert.match(smokeReporter, /projectSlug/u);
   assert.match(smokeReporter, /target/u);
+  assert.match(smokeReporter, /DEPLOY_APPROVAL_TOKEN_MODE/u);
+  assert.match(smokeReporter, /exchange/u);
+  assert.match(smokeReporter, /legacy-break-glass/u);
   assert.doesNotMatch(smokeReporter, /outcome = \{/u);
   assert.doesNotMatch(smokeReporter, /(?:CLOUDFLARE_|wrangler|artifact-promote|artifact-download|applyD1|D1|R2)/u);
 });
