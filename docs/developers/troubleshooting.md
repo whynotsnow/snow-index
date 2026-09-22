@@ -61,7 +61,7 @@ pnpm check
 - selected-artifact 审批前的公开 API preflight 失败：`/api/v1/portal/summary` 或 `/api/v1/plaza/topics?type=all&limit=20&offset=0` 不可访问、不是 JSON，或返回 shape 明显不符合 snow-index 预期。
 - Pages deploy 成功后的 deployment run success callback 没有从中心 response 返回精确 deployment run id；此时不得用 request id、GitHub run id 或 artifact id 伪造 smoke evidence。
 - run-bound public smoke 失败：`https://whynotsnow.com/` 未返回预期 Portal 导航，或 `https://whynotsnow.com/robots.txt` 未返回预期 robots/sitemap 内容。
-- smoke evidence POST 到 `/api/v1/deployments/integration-evidence/smoke` 失败；请求体的 `outcome` 必须是字符串 `succeeded` 或 `failed`，失败时只附 sanitized `failureCode`。检查 token scope 是否仍是最小 `deployments:request`、`deployments:verify`、`deployments:run-update`，不要升级到 artifact/API/D1/R2 权限。
+- smoke evidence POST 到 `/api/v1/deployments/runs/:deploymentRunId/smoke` 失败；路径中的 `deploymentRunId` 必须来自中心 run callback，请求体的 `outcome` 必须是字符串 `succeeded` 或 `failed`，失败时只附 sanitized `failureCode`。检查 token scope 是否仍是最小 `deployments:request`、`deployments:verify`、`deployments:run-update`，不要升级到 artifact/API/D1/R2 权限。
 - `pages-dist.tar.gz` 缺失、不是唯一归档、candidate 已过期，或 GitHub artifact id/run/name 与登记 metadata 不一致。
 - 下载后的 tar 路径、mode、owner、mtime、entry type 或 digest 不符合 canonical contract。
 - selected-artifact workflow 使用了错误 commit，或尝试从工作区 `public/` 重新部署。

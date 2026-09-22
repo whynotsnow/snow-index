@@ -129,14 +129,12 @@ test("project-owned run callback emits the exact deployment run id from the cent
 test("run-bound smoke evidence uses only public pages and the exact deployment run id", () => {
   assert.match(smokeReporter, /https:\/\/whynotsnow\.com\//u);
   assert.match(smokeReporter, /https:\/\/whynotsnow\.com\/robots\.txt/u);
-  assert.match(smokeReporter, /\/api\/v1\/deployments\/integration-evidence\/smoke/u);
+  assert.match(smokeReporter, /\/api\/v1\/deployments\/runs\/\$\{encodeURIComponent\(deploymentRunId\)\}\/smoke/u);
   assert.match(smokeReporter, /deploymentRunId/u);
   assert.match(smokeReporter, /DEPLOY_SMOKE_DEPLOYMENT_RUN_ID/u);
   assert.match(smokeReporter, /succeeded/u);
   assert.match(smokeReporter, /failed/u);
   assert.match(smokeReporter, /failureCode/u);
-  assert.match(smokeReporter, /projectSlug/u);
-  assert.match(smokeReporter, /target/u);
   assert.match(smokeReporter, /DEPLOY_APPROVAL_TOKEN_MODE/u);
   assert.match(smokeReporter, /exchange/u);
   assert.match(smokeReporter, /legacy-break-glass/u);

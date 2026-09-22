@@ -90,25 +90,28 @@ const outcome = succeeded ? "succeeded" : "failed";
 
 if (!smokeOnly) {
   const payload = {
-    projectSlug,
-    target,
-    deploymentRunId,
     outcome,
   };
   if (failureCode) payload.failureCode = failureCode;
-  const response = await fetch(`${apiBaseUrl}/api/v1/deployments/integration-evidence/smoke`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `${apiBaseUrl}/api/v1/deployments/runs/${encodeURIComponent(deploymentRunId)}/smoke`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
+  );
   const body = await response.json().catch(() => null);
   if (!response.ok || body?.ok !== true) {
     const code = body?.ok === false ? body.error.code : `http_${response.status}`;
     fail(`写入 smoke evidence 失败：${code}`);
+  }
+  if (body?.data?.deploymentRunId !== deploymentRunId) {
+    fail("smoke evidence 响应的 deploymentRunId 不匹配，拒绝报告成功。");
   }
 }
 
