@@ -38,7 +38,7 @@ Workflow：
 - 两条路径先用固定 SHA 的 Action 读取 `snow-index/pages` contract；candidate 还用该 Action 登记 artifact、回写 Candidate Run，selected-artifact 用该 Action 回写 deployment run started/failure、请求/等待/消费 owner approval。
 - selected-artifact 先回写 deployment run 已开始，再做公开 `snow-base/api` 兼容性 preflight，然后按 GitHub artifact id 和 source run id 下载归档，复验 `sha256:<64 位小写十六进制>`，解包到临时 Pages payload，再请求、等待和消费 owner approval。
 - owner approval 消费成功后，只从已复验的临时 payload 执行 Wrangler，不重新 build、不使用工作区 `public/`，也不按 mutable artifact name 取得授权。
-- selected-artifact workflow 在 Pages 部署成功后使用项目自有的最小 `scripts/report-deployment-run.mjs` 回写 `completed/success`，并从中心 response 取得精确 deployment run id；随后用 `scripts/report-smoke-evidence.mjs` 对 `https://whynotsnow.com/` 和 `https://whynotsnow.com/robots.txt` 做 run-bound public smoke，并 POST 到中心 integration evidence endpoint。
+- selected-artifact workflow 在 Pages 部署成功后使用项目自有的最小 `scripts/report-deployment-run.mjs` 回写 `completed/success`，并从中心 response 取得精确 deployment run id；随后用 `scripts/report-smoke-evidence.mjs` 对 `https://whynotsnow.com/` 和 `https://whynotsnow.com/robots.txt` 做 run-bound public smoke，并 POST 到 canonical `POST /api/v1/deployments/runs/:deploymentRunId/smoke` endpoint。
 - smoke evidence 的 `outcome` 必须是字符串 `succeeded` 或 `failed`；失败时只附 sanitized `failureCode`。smoke 失败会让 workflow 失败，但不会尝试把已成功的 deployment run 改回 failure。
 - selected-artifact workflow 在失败后仍用固定 SHA 的 Action 回写 deployment run failure。所有 deployment run 回写只用于中心生命周期状态，不授予 snow-index 读取、提升或重新组装中心 artifact 的能力。
 - snow-base control plane 在 Admin selected dispatch 前负责 GitHub artifact 获取、canonical 校验和 durable R2 promotion；snow-index 不请求 `deployments:artifact-promote` 或 `deployments:artifact-download`。
